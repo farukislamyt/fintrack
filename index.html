@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="FinTrack — A powerful personal finance manager to track your income, expenses, budgets, and financial goals with beautiful charts and insights." />
+  <meta name="keywords" content="income tracker, expense manager, personal finance, budget planner, money management, financial goals" />
+  <meta name="author" content="FinTrack" />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:title" content="FinTrack — Personal Finance Manager" />
+  <meta property="og:description" content="Track income, expenses, budgets and financial goals with ease." />
+  <meta property="og:type" content="website" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>FinTrack — Personal Finance Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+  <!-- App Scripts -->
+  <script src="js/storage.js" defer></script>
+  <script src="js/utils.js" defer></script>
+  <script src="js/charts.js" defer></script>
+  <script src="js/transactions.js" defer></script>
+  <script src="js/budget.js" defer></script>
+  <script src="js/goals.js" defer></script>
+  <script src="js/reports.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <!-- Skip to content for accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">◈</span>
+        <span class="logo-text">FinTrack</span>
+      </div>
+      <button class="sidebar-close" id="sidebarClose" aria-label="Close menu">✕</button>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Site navigation">
+      <ul role="list">
+        <li>
+          <button class="nav-item active" data-page="dashboard" aria-current="page">
+            <span class="nav-icon">⬡</span>
+            <span>Dashboard</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-item" data-page="transactions">
+            <span class="nav-icon">⇄</span>
+            <span>Transactions</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-item" data-page="budget">
+            <span class="nav-icon">◎</span>
+            <span>Budget</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-item" data-page="goals">
+            <span class="nav-icon">◈</span>
+            <span>Goals</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-item" data-page="reports">
+            <span class="nav-icon">▦</span>
+            <span>Reports</span>
+          </button>
+        </li>
+        <li>
+          <button class="nav-item" data-page="settings">
+            <span class="nav-icon">⚙</span>
+            <span>Settings</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="balance-pill" id="sidebarBalance">
+        <span class="balance-label">Net Balance</span>
+        <span class="balance-amount" id="sidebarBalanceAmount">$0.00</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Overlay for mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- Main Layout -->
+  <div class="layout">
+    <!-- Top Header -->
+    <header class="topbar" role="banner">
+      <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      <div class="topbar-actions">
+        <button class="btn-add" id="quickAddBtn" aria-label="Add transaction">
+          <span>+</span> Add
+        </button>
+        <button class="btn-icon" id="exportBtn" aria-label="Export data" title="Export CSV">⬇</button>
+        <button class="btn-icon theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">◑</button>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main id="main-content" class="main-content" role="main">
+
+      <!-- ======== DASHBOARD PAGE ======== -->
+      <section class="page active" id="page-dashboard" aria-labelledby="dash-heading">
+        <div class="page-header">
+          <h1 id="dash-heading">Overview</h1>
+          <div class="period-selector">
+            <select id="dashPeriod" aria-label="Select period">
+              <option value="week">This Week</option>
+              <option value="month" selected>This Month</option>
+              <option value="year">This Year</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="cards-grid">
+          <article class="card card--income" aria-label="Total income">
+            <div class="card-header">
+              <span class="card-label">Total Income</span>
+              <span class="card-icon">↑</span>
+            </div>
+            <div class="card-amount" id="totalIncome">$0.00</div>
+            <div class="card-sub" id="incomeChange"></div>
+          </article>
+          <article class="card card--expense" aria-label="Total expenses">
+            <div class="card-header">
+              <span class="card-label">Total Expenses</span>
+              <span class="card-icon">↓</span>
+            </div>
+            <div class="card-amount" id="totalExpenses">$0.00</div>
+            <div class="card-sub" id="expenseChange"></div>
+          </article>
+          <article class="card card--balance" aria-label="Net balance">
+            <div class="card-header">
+              <span class="card-label">Net Balance</span>
+              <span class="card-icon">⇌</span>
+            </div>
+            <div class="card-amount" id="netBalance">$0.00</div>
+            <div class="card-sub" id="savingsRate"></div>
+          </article>
+          <article class="card card--savings" aria-label="Savings rate">
+            <div class="card-header">
+              <span class="card-label">Savings Rate</span>
+              <span class="card-icon">◎</span>
+            </div>
+            <div class="card-amount" id="savingsPercent">0%</div>
+            <div class="card-sub" id="savingsGoal"></div>
+          </article>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Cash Flow</h2>
+              <div class="chart-legend">
+                <span class="legend-dot legend-income"></span>Income
+                <span class="legend-dot legend-expense"></span>Expense
+              </div>
+            </div>
+            <canvas id="cashflowChart" aria-label="Cash flow chart" role="img"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-header">
+              <h2>Spending by Category</h2>
+            </div>
+            <canvas id="categoryChart" aria-label="Category breakdown chart" role="img"></canvas>
+          </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="section-card">
+          <div class="section-card-header">
+            <h2>Recent Transactions</h2>
+            <button class="link-btn" data-page="transactions">View all →</button>
+          </div>
+          <div id="recentTransactions" class="transaction-list" role="list"></div>
+        </div>
+      </section>
+
+      <!-- ======== TRANSACTIONS PAGE ======== -->
+      <section class="page" id="page-transactions" aria-labelledby="txn-heading">
+        <div class="page-header">
+          <h1 id="txn-heading">Transactions</h1>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-bar" role="search" aria-label="Filter transactions">
+          <input type="text" id="searchInput" placeholder="Search transactions…" class="search-input" aria-label="Search" />
+          <select id="filterType" aria-label="Filter by type">
+            <option value="all">All Types</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+          <select id="filterCategory" aria-label="Filter by category">
+            <option value="all">All Categories</option>
+          </select>
+          <input type="month" id="filterMonth" aria-label="Filter by month" />
+          <button class="btn-ghost" id="clearFilters">Clear</button>
+        </div>
+
+        <!-- Transaction Table -->
+        <div class="table-wrapper" role="region" aria-label="Transactions table">
+          <table class="data-table" id="transactionTable" aria-label="Transactions">
+            <thead>
+              <tr>
+                <th scope="col" data-sort="date">Date <span class="sort-icon">↕</span></th>
+                <th scope="col" data-sort="description">Description <span class="sort-icon">↕</span></th>
+                <th scope="col" data-sort="category">Category <span class="sort-icon">↕</span></th>
+                <th scope="col" data-sort="type">Type <span class="sort-icon">↕</span></th>
+                <th scope="col" data-sort="amount">Amount <span class="sort-icon">↕</span></th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="transactionTableBody"></tbody>
+          </table>
+          <div id="noTransactions" class="empty-state" hidden>
+            <div class="empty-icon">◎</div>
+            <p>No transactions found.</p>
+            <button class="btn-add" id="emptyAddBtn">Add your first transaction</button>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination" role="navigation" aria-label="Pagination"></div>
+      </section>
+
+      <!-- ======== BUDGET PAGE ======== -->
+      <section class="page" id="page-budget" aria-labelledby="budget-heading">
+        <div class="page-header">
+          <h1 id="budget-heading">Budget Planner</h1>
+          <button class="btn-add" id="addBudgetBtn">+ Add Budget</button>
+        </div>
+
+        <div class="budget-overview" id="budgetOverview"></div>
+
+        <div class="section-card">
+          <h2>Monthly Budgets</h2>
+          <div id="budgetList" class="budget-list"></div>
+          <div id="noBudgets" class="empty-state" hidden>
+            <div class="empty-icon">◎</div>
+            <p>No budgets set. Create one to track spending.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======== GOALS PAGE ======== -->
+      <section class="page" id="page-goals" aria-labelledby="goals-heading">
+        <div class="page-header">
+          <h1 id="goals-heading">Financial Goals</h1>
+          <button class="btn-add" id="addGoalBtn">+ Add Goal</button>
+        </div>
+        <div id="goalsList" class="goals-grid"></div>
+        <div id="noGoals" class="empty-state" hidden>
+          <div class="empty-icon">◈</div>
+          <p>No goals yet. Set a financial goal to stay motivated!</p>
+        </div>
+      </section>
+
+      <!-- ======== REPORTS PAGE ======== -->
+      <section class="page" id="page-reports" aria-labelledby="reports-heading">
+        <div class="page-header">
+          <h1 id="reports-heading">Reports & Analytics</h1>
+          <div class="period-selector">
+            <select id="reportYear" aria-label="Select year"></select>
+          </div>
+        </div>
+
+        <div class="cards-grid cards-grid--3">
+          <article class="card card--income">
+            <div class="card-label">Annual Income</div>
+            <div class="card-amount" id="annualIncome">$0.00</div>
+          </article>
+          <article class="card card--expense">
+            <div class="card-label">Annual Expenses</div>
+            <div class="card-amount" id="annualExpenses">$0.00</div>
+          </article>
+          <article class="card card--balance">
+            <div class="card-label">Annual Savings</div>
+            <div class="card-amount" id="annualSavings">$0.00</div>
+          </article>
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="chart-card-header"><h2>Monthly Breakdown</h2></div>
+            <canvas id="monthlyChart" aria-label="Monthly breakdown chart" role="img"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-card-header"><h2>Income vs Expenses Trend</h2></div>
+            <canvas id="trendChart" aria-label="Trend chart" role="img"></canvas>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-card-header">
+            <h2>Category Breakdown</h2>
+          </div>
+          <div id="categoryBreakdown" class="category-breakdown"></div>
+        </div>
+      </section>
+
+      <!-- ======== SETTINGS PAGE ======== -->
+      <section class="page" id="page-settings" aria-labelledby="settings-heading">
+        <div class="page-header">
+          <h1 id="settings-heading">Settings</h1>
+        </div>
+
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h2>Profile & Currency</h2>
+            <div class="form-group">
+              <label for="userName">Your Name</label>
+              <input type="text" id="userName" placeholder="John Doe" />
+            </div>
+            <div class="form-group">
+              <label for="currencySelect">Currency</label>
+              <select id="currencySelect" aria-label="Currency">
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GBP">GBP (£)</option>
+                <option value="BDT">BDT (৳)</option>
+                <option value="INR">INR (₹)</option>
+                <option value="JPY">JPY (¥)</option>
+                <option value="CAD">CAD (CA$)</option>
+                <option value="AUD">AUD (A$)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="dateFormat">Date Format</label>
+              <select id="dateFormat" aria-label="Date format">
+                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="savingsTarget">Monthly Savings Target (%)</label>
+              <input type="number" id="savingsTarget" min="0" max="100" placeholder="20" />
+            </div>
+            <button class="btn-primary" id="saveSettings">Save Settings</button>
+          </div>
+
+          <div class="settings-card">
+            <h2>Categories</h2>
+            <div id="categoryManager">
+              <div id="incomeCategories">
+                <h3>Income Categories</h3>
+                <div id="incomeCatList" class="category-list"></div>
+              </div>
+              <div id="expenseCategories">
+                <h3>Expense Categories</h3>
+                <div id="expenseCatList" class="category-list"></div>
+              </div>
+            </div>
+            <div class="add-category-form">
+              <input type="text" id="newCategoryName" placeholder="Category name" />
+              <select id="newCategoryType">
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+              </select>
+              <button class="btn-primary" id="addCategoryBtn">Add</button>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h2>Data Management</h2>
+            <p class="settings-desc">Export your financial data or import from a backup.</p>
+            <div class="data-actions">
+              <button class="btn-primary" id="exportJsonBtn">⬇ Export JSON</button>
+              <button class="btn-primary" id="exportCsvBtn">⬇ Export CSV</button>
+              <label class="btn-ghost btn-upload" for="importFile">⬆ Import JSON</label>
+              <input type="file" id="importFile" accept=".json" hidden />
+            </div>
+            <hr class="divider" />
+            <h3>Danger Zone</h3>
+            <button class="btn-danger" id="clearAllData">⚠ Clear All Data</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ======== MODALS ======== -->
+
+  <!-- Add/Edit Transaction Modal -->
+  <div class="modal-backdrop" id="transactionModal" role="dialog" aria-modal="true" aria-labelledby="txnModalTitle" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="txnModalTitle">Add Transaction</h2>
+        <button class="modal-close" data-modal="transactionModal" aria-label="Close">✕</button>
+      </div>
+      <form id="transactionForm" novalidate>
+        <div class="modal-body">
+          <div class="type-toggle" role="group" aria-label="Transaction type">
+            <button type="button" class="type-btn active" data-type="expense">Expense</button>
+            <button type="button" class="type-btn" data-type="income">Income</button>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="txnAmount">Amount *</label>
+              <input type="number" id="txnAmount" min="0.01" step="0.01" placeholder="0.00" required />
+            </div>
+            <div class="form-group">
+              <label for="txnDate">Date *</label>
+              <input type="date" id="txnDate" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="txnDescription">Description *</label>
+            <input type="text" id="txnDescription" placeholder="e.g. Monthly salary, Grocery shopping" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="txnCategory">Category *</label>
+              <select id="txnCategory" required></select>
+            </div>
+            <div class="form-group">
+              <label for="txnPayment">Payment Method</label>
+              <select id="txnPayment">
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="bank">Bank Transfer</option>
+                <option value="mobile">Mobile Banking</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="txnNotes">Notes</label>
+            <textarea id="txnNotes" placeholder="Optional notes…" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="txnRecurring" />
+              <span>Recurring transaction</span>
+            </label>
+          </div>
+          <div class="form-group" id="recurringGroup" hidden>
+            <label for="txnRecurringFreq">Frequency</label>
+            <select id="txnRecurringFreq">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly" selected>Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" data-modal="transactionModal">Cancel</button>
+          <button type="submit" class="btn-primary" id="txnSubmitBtn">Add Transaction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add/Edit Budget Modal -->
+  <div class="modal-backdrop" id="budgetModal" role="dialog" aria-modal="true" aria-labelledby="budgetModalTitle" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="budgetModalTitle">Add Budget</h2>
+        <button class="modal-close" data-modal="budgetModal" aria-label="Close">✕</button>
+      </div>
+      <form id="budgetForm" novalidate>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="budgetCategory">Category *</label>
+            <select id="budgetCategory" required></select>
+          </div>
+          <div class="form-group">
+            <label for="budgetAmount">Monthly Limit *</label>
+            <input type="number" id="budgetAmount" min="1" step="0.01" placeholder="0.00" required />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" data-modal="budgetModal">Cancel</button>
+          <button type="submit" class="btn-primary">Save Budget</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add/Edit Goal Modal -->
+  <div class="modal-backdrop" id="goalModal" role="dialog" aria-modal="true" aria-labelledby="goalModalTitle" hidden>
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="goalModalTitle">Add Goal</h2>
+        <button class="modal-close" data-modal="goalModal" aria-label="Close">✕</button>
+      </div>
+      <form id="goalForm" novalidate>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="goalName">Goal Name *</label>
+            <input type="text" id="goalName" placeholder="e.g. Emergency Fund, Vacation" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="goalTarget">Target Amount *</label>
+              <input type="number" id="goalTarget" min="1" step="0.01" placeholder="0.00" required />
+            </div>
+            <div class="form-group">
+              <label for="goalSaved">Saved So Far</label>
+              <input type="number" id="goalSaved" min="0" step="0.01" placeholder="0.00" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="goalDeadline">Target Date</label>
+            <input type="date" id="goalDeadline" />
+          </div>
+          <div class="form-group">
+            <label for="goalEmoji">Icon</label>
+            <div class="emoji-picker" id="emojiPicker" role="listbox" aria-label="Pick goal icon">
+              <button type="button" class="emoji-opt active" data-emoji="🎯">🎯</button>
+              <button type="button" class="emoji-opt" data-emoji="🏠">🏠</button>
+              <button type="button" class="emoji-opt" data-emoji="✈️">✈️</button>
+              <button type="button" class="emoji-opt" data-emoji="🚗">🚗</button>
+              <button type="button" class="emoji-opt" data-emoji="📚">📚</button>
+              <button type="button" class="emoji-opt" data-emoji="💍">💍</button>
+              <button type="button" class="emoji-opt" data-emoji="🏋️">🏋️</button>
+              <button type="button" class="emoji-opt" data-emoji="💻">💻</button>
+              <button type="button" class="emoji-opt" data-emoji="🌱">🌱</button>
+              <button type="button" class="emoji-opt" data-emoji="💰">💰</button>
+            </div>
+            <input type="hidden" id="goalEmoji" value="🎯" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ghost" data-modal="goalModal">Cancel</button>
+          <button type="submit" class="btn-primary">Save Goal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Modal -->
+  <div class="modal-backdrop" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" hidden>
+    <div class="modal modal--sm">
+      <div class="modal-header">
+        <h2 id="confirmTitle">Confirm Delete</h2>
+        <button class="modal-close" data-modal="confirmModal" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMessage">Are you sure you want to delete this item?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" data-modal="confirmModal">Cancel</button>
+        <button class="btn-danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+</body>
+</html>
