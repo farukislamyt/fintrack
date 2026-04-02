@@ -1,24 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="FinTrack — A powerful personal finance manager to track your income, expenses, budgets, and financial goals with beautiful charts and insights." />
-  <meta name="keywords" content="income tracker, expense manager, personal finance, budget planner, money management, financial goals" />
-  <meta name="author" content="FinTrack" />
-  <meta name="robots" content="index, follow" />
-  <meta property="og:title" content="FinTrack — Personal Finance Manager" />
-  <meta property="og:description" content="Track income, expenses, budgets and financial goals with ease." />
-  <meta property="og:type" content="website" />
-  <meta name="theme-color" content="#0f172a" />
-  <title>FinTrack — Personal Finance Manager</title>
+  <meta name="description" content="FinTrack Pro — Industrial-grade personal finance manager. Track income, expenses, budgets, and financial goals." />
+  <meta name="theme-color" content="#080b10" />
+  <title>FinTrack Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
-  <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-  <!-- App Scripts -->
   <script src="js/storage.js" defer></script>
   <script src="js/utils.js" defer></script>
   <script src="js/charts.js" defer></script>
@@ -29,54 +21,101 @@
   <script src="js/app.js" defer></script>
 </head>
 <body>
-  <!-- Skip to content for accessibility -->
   <a href="#main-content" class="skip-link">Skip to main content</a>
 
-  <!-- Sidebar Navigation -->
+  <!-- ═══ SIDEBAR ═══ -->
   <aside class="sidebar" id="sidebar" aria-label="Main navigation">
     <div class="sidebar-header">
       <div class="logo">
-        <span class="logo-icon">◈</span>
-        <span class="logo-text">FinTrack</span>
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;color:white">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+          </svg>
+        </div>
+        <div class="logo-text-wrap">
+          <span class="logo-text">FinTrack</span>
+          <span class="logo-sub">Pro</span>
+        </div>
       </div>
       <button class="sidebar-close" id="sidebarClose" aria-label="Close menu">✕</button>
     </div>
 
     <nav class="sidebar-nav" aria-label="Site navigation">
+      <div class="nav-section-label">Overview</div>
       <ul role="list">
         <li>
           <button class="nav-item active" data-page="dashboard" aria-current="page">
-            <span class="nav-icon">⬡</span>
+            <div class="nav-icon-box">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+              </svg>
+            </div>
             <span>Dashboard</span>
           </button>
         </li>
         <li>
           <button class="nav-item" data-page="transactions">
-            <span class="nav-icon">⇄</span>
+            <div class="nav-icon-box">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+                <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+              </svg>
+            </div>
             <span>Transactions</span>
           </button>
         </li>
+      </ul>
+
+      <div class="nav-section-label">Planning</div>
+      <ul role="list">
         <li>
           <button class="nav-item" data-page="budget">
-            <span class="nav-icon">◎</span>
+            <div class="nav-icon-box">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
             <span>Budget</span>
           </button>
         </li>
         <li>
           <button class="nav-item" data-page="goals">
-            <span class="nav-icon">◈</span>
+            <div class="nav-icon-box">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/>
+                <circle cx="12" cy="12" r="2"/>
+              </svg>
+            </div>
             <span>Goals</span>
           </button>
         </li>
+      </ul>
+
+      <div class="nav-section-label">Analytics</div>
+      <ul role="list">
         <li>
           <button class="nav-item" data-page="reports">
-            <span class="nav-icon">▦</span>
+            <div class="nav-icon-box">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
+              </svg>
+            </div>
             <span>Reports</span>
           </button>
         </li>
         <li>
           <button class="nav-item" data-page="settings">
-            <span class="nav-icon">⚙</span>
+            <div class="nav-icon-box">
+              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </div>
             <span>Settings</span>
           </button>
         </li>
@@ -91,12 +130,10 @@
     </div>
   </aside>
 
-  <!-- Overlay for mobile -->
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-  <!-- Main Layout -->
+  <!-- ═══ MAIN LAYOUT ═══ -->
   <div class="layout">
-    <!-- Top Header -->
     <header class="topbar" role="banner">
       <button class="hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
         <span></span><span></span><span></span>
@@ -104,20 +141,26 @@
       <div class="topbar-title" id="topbarTitle">Dashboard</div>
       <div class="topbar-actions">
         <button class="btn-add" id="quickAddBtn" aria-label="Add transaction">
-          <span>+</span> Add
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add
         </button>
-        <button class="btn-icon" id="exportBtn" aria-label="Export data" title="Export CSV">⬇</button>
-        <button class="btn-icon theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">◑</button>
+        <button class="btn-icon" id="exportBtn" aria-label="Export CSV" title="Export CSV">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+        <button class="btn-icon theme-toggle" id="themeToggle" aria-label="Toggle theme" title="Toggle theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="15" height="15"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        </button>
       </div>
     </header>
 
-    <!-- Main Content Area -->
     <main id="main-content" class="main-content" role="main">
 
-      <!-- ======== DASHBOARD PAGE ======== -->
+      <!-- ═══ DASHBOARD ═══ -->
       <section class="page active" id="page-dashboard" aria-labelledby="dash-heading">
         <div class="page-header">
-          <h1 id="dash-heading">Overview</h1>
+          <div>
+            <h1 id="dash-heading">Overview</h1>
+          </div>
           <div class="period-selector">
             <select id="dashPeriod" aria-label="Select period">
               <option value="week">This Week</option>
@@ -128,12 +171,13 @@
           </div>
         </div>
 
-        <!-- Summary Cards -->
         <div class="cards-grid">
           <article class="card card--income" aria-label="Total income">
             <div class="card-header">
               <span class="card-label">Total Income</span>
-              <span class="card-icon">↑</span>
+              <div class="card-icon-wrap">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+              </div>
             </div>
             <div class="card-amount" id="totalIncome">$0.00</div>
             <div class="card-sub" id="incomeChange"></div>
@@ -141,7 +185,9 @@
           <article class="card card--expense" aria-label="Total expenses">
             <div class="card-header">
               <span class="card-label">Total Expenses</span>
-              <span class="card-icon">↓</span>
+              <div class="card-icon-wrap">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+              </div>
             </div>
             <div class="card-amount" id="totalExpenses">$0.00</div>
             <div class="card-sub" id="expenseChange"></div>
@@ -149,7 +195,9 @@
           <article class="card card--balance" aria-label="Net balance">
             <div class="card-header">
               <span class="card-label">Net Balance</span>
-              <span class="card-icon">⇌</span>
+              <div class="card-icon-wrap">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              </div>
             </div>
             <div class="card-amount" id="netBalance">$0.00</div>
             <div class="card-sub" id="savingsRate"></div>
@@ -157,21 +205,22 @@
           <article class="card card--savings" aria-label="Savings rate">
             <div class="card-header">
               <span class="card-label">Savings Rate</span>
-              <span class="card-icon">◎</span>
+              <div class="card-icon-wrap">
+                <svg class="card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+              </div>
             </div>
             <div class="card-amount" id="savingsPercent">0%</div>
             <div class="card-sub" id="savingsGoal"></div>
           </article>
         </div>
 
-        <!-- Charts Row -->
         <div class="charts-grid">
           <div class="chart-card">
             <div class="chart-card-header">
               <h2>Cash Flow</h2>
               <div class="chart-legend">
-                <span class="legend-dot legend-income"></span>Income
-                <span class="legend-dot legend-expense"></span>Expense
+                <div class="legend-item"><div class="legend-dot legend-income"></div> Income</div>
+                <div class="legend-item"><div class="legend-dot legend-expense"></div> Expense</div>
               </div>
             </div>
             <canvas id="cashflowChart" aria-label="Cash flow chart" role="img"></canvas>
@@ -184,7 +233,6 @@
           </div>
         </div>
 
-        <!-- Recent Transactions -->
         <div class="section-card">
           <div class="section-card-header">
             <h2>Recent Transactions</h2>
@@ -194,13 +242,12 @@
         </div>
       </section>
 
-      <!-- ======== TRANSACTIONS PAGE ======== -->
+      <!-- ═══ TRANSACTIONS ═══ -->
       <section class="page" id="page-transactions" aria-labelledby="txn-heading">
         <div class="page-header">
           <h1 id="txn-heading">Transactions</h1>
         </div>
 
-        <!-- Filters -->
         <div class="filters-bar" role="search" aria-label="Filter transactions">
           <input type="text" id="searchInput" placeholder="Search transactions…" class="search-input" aria-label="Search" />
           <select id="filterType" aria-label="Filter by type">
@@ -215,7 +262,6 @@
           <button class="btn-ghost" id="clearFilters">Clear</button>
         </div>
 
-        <!-- Transaction Table -->
         <div class="table-wrapper" role="region" aria-label="Transactions table">
           <table class="data-table" id="transactionTable" aria-label="Transactions">
             <thead>
@@ -231,27 +277,26 @@
             <tbody id="transactionTableBody"></tbody>
           </table>
           <div id="noTransactions" class="empty-state" hidden>
-            <div class="empty-icon">◎</div>
+            <div class="empty-icon">⇄</div>
             <p>No transactions found.</p>
             <button class="btn-add" id="emptyAddBtn">Add your first transaction</button>
           </div>
         </div>
-
-        <!-- Pagination -->
         <div class="pagination" id="pagination" role="navigation" aria-label="Pagination"></div>
       </section>
 
-      <!-- ======== BUDGET PAGE ======== -->
+      <!-- ═══ BUDGET ═══ -->
       <section class="page" id="page-budget" aria-labelledby="budget-heading">
         <div class="page-header">
           <h1 id="budget-heading">Budget Planner</h1>
-          <button class="btn-add" id="addBudgetBtn">+ Add Budget</button>
+          <button class="btn-add" id="addBudgetBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Budget
+          </button>
         </div>
-
         <div class="budget-overview" id="budgetOverview"></div>
-
         <div class="section-card">
-          <h2>Monthly Budgets</h2>
+          <div class="section-card-header"><h2>Monthly Budgets</h2></div>
           <div id="budgetList" class="budget-list"></div>
           <div id="noBudgets" class="empty-state" hidden>
             <div class="empty-icon">◎</div>
@@ -260,11 +305,14 @@
         </div>
       </section>
 
-      <!-- ======== GOALS PAGE ======== -->
+      <!-- ═══ GOALS ═══ -->
       <section class="page" id="page-goals" aria-labelledby="goals-heading">
         <div class="page-header">
           <h1 id="goals-heading">Financial Goals</h1>
-          <button class="btn-add" id="addGoalBtn">+ Add Goal</button>
+          <button class="btn-add" id="addGoalBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Goal
+          </button>
         </div>
         <div id="goalsList" class="goals-grid"></div>
         <div id="noGoals" class="empty-state" hidden>
@@ -273,7 +321,7 @@
         </div>
       </section>
 
-      <!-- ======== REPORTS PAGE ======== -->
+      <!-- ═══ REPORTS ═══ -->
       <section class="page" id="page-reports" aria-labelledby="reports-heading">
         <div class="page-header">
           <h1 id="reports-heading">Reports & Analytics</h1>
@@ -309,19 +357,14 @@
         </div>
 
         <div class="section-card">
-          <div class="section-card-header">
-            <h2>Category Breakdown</h2>
-          </div>
+          <div class="section-card-header"><h2>Category Breakdown</h2></div>
           <div id="categoryBreakdown" class="category-breakdown"></div>
         </div>
       </section>
 
-      <!-- ======== SETTINGS PAGE ======== -->
+      <!-- ═══ SETTINGS ═══ -->
       <section class="page" id="page-settings" aria-labelledby="settings-heading">
-        <div class="page-header">
-          <h1 id="settings-heading">Settings</h1>
-        </div>
-
+        <div class="page-header"><h1 id="settings-heading">Settings</h1></div>
         <div class="settings-grid">
           <div class="settings-card">
             <h2>Profile & Currency</h2>
@@ -344,7 +387,7 @@
             </div>
             <div class="form-group">
               <label for="dateFormat">Date Format</label>
-              <select id="dateFormat" aria-label="Date format">
+              <select id="dateFormat">
                 <option value="MM/DD/YYYY">MM/DD/YYYY</option>
                 <option value="DD/MM/YYYY">DD/MM/YYYY</option>
                 <option value="YYYY-MM-DD">YYYY-MM-DD</option>
@@ -381,11 +424,11 @@
 
           <div class="settings-card">
             <h2>Data Management</h2>
-            <p class="settings-desc">Export your financial data or import from a backup.</p>
+            <p class="settings-desc">Export your financial data as JSON or CSV, or restore from a backup file.</p>
             <div class="data-actions">
-              <button class="btn-primary" id="exportJsonBtn">⬇ Export JSON</button>
-              <button class="btn-primary" id="exportCsvBtn">⬇ Export CSV</button>
-              <label class="btn-ghost btn-upload" for="importFile">⬆ Import JSON</label>
+              <button class="btn-primary" id="exportJsonBtn">↓ Export JSON</button>
+              <button class="btn-primary" id="exportCsvBtn">↓ Export CSV</button>
+              <label class="btn-ghost btn-upload" for="importFile">↑ Import JSON</label>
               <input type="file" id="importFile" accept=".json" hidden />
             </div>
             <hr class="divider" />
@@ -398,9 +441,9 @@
     </main>
   </div>
 
-  <!-- ======== MODALS ======== -->
+  <!-- ═══ MODALS ═══ -->
 
-  <!-- Add/Edit Transaction Modal -->
+  <!-- Transaction Modal -->
   <div class="modal-backdrop" id="transactionModal" role="dialog" aria-modal="true" aria-labelledby="txnModalTitle" hidden>
     <div class="modal">
       <div class="modal-header">
@@ -445,7 +488,7 @@
           </div>
           <div class="form-group">
             <label for="txnNotes">Notes</label>
-            <textarea id="txnNotes" placeholder="Optional notes…" rows="2"></textarea>
+            <textarea id="txnNotes" placeholder="Optional notes…" rows="2" style="height:auto"></textarea>
           </div>
           <div class="form-group">
             <label class="checkbox-label">
@@ -471,9 +514,9 @@
     </div>
   </div>
 
-  <!-- Add/Edit Budget Modal -->
+  <!-- Budget Modal -->
   <div class="modal-backdrop" id="budgetModal" role="dialog" aria-modal="true" aria-labelledby="budgetModalTitle" hidden>
-    <div class="modal">
+    <div class="modal modal--sm">
       <div class="modal-header">
         <h2 id="budgetModalTitle">Add Budget</h2>
         <button class="modal-close" data-modal="budgetModal" aria-label="Close">✕</button>
@@ -497,7 +540,7 @@
     </div>
   </div>
 
-  <!-- Add/Edit Goal Modal -->
+  <!-- Goal Modal -->
   <div class="modal-backdrop" id="goalModal" role="dialog" aria-modal="true" aria-labelledby="goalModalTitle" hidden>
     <div class="modal">
       <div class="modal-header">
@@ -525,7 +568,7 @@
             <input type="date" id="goalDeadline" />
           </div>
           <div class="form-group">
-            <label for="goalEmoji">Icon</label>
+            <label>Icon</label>
             <div class="emoji-picker" id="emojiPicker" role="listbox" aria-label="Pick goal icon">
               <button type="button" class="emoji-opt active" data-emoji="🎯">🎯</button>
               <button type="button" class="emoji-opt" data-emoji="🏠">🏠</button>
@@ -549,7 +592,7 @@
     </div>
   </div>
 
-  <!-- Confirm Delete Modal -->
+  <!-- Confirm Modal -->
   <div class="modal-backdrop" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" hidden>
     <div class="modal modal--sm">
       <div class="modal-header">
@@ -557,7 +600,7 @@
         <button class="modal-close" data-modal="confirmModal" aria-label="Close">✕</button>
       </div>
       <div class="modal-body">
-        <p id="confirmMessage">Are you sure you want to delete this item?</p>
+        <p id="confirmMessage" style="font-size:0.875rem;color:var(--text-secondary)">Are you sure you want to delete this item?</p>
       </div>
       <div class="modal-footer">
         <button class="btn-ghost" data-modal="confirmModal">Cancel</button>
@@ -566,7 +609,6 @@
     </div>
   </div>
 
-  <!-- Toast Notifications -->
   <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
 
 </body>

@@ -102,7 +102,7 @@ const Utils = (() => {
     const el = document.createElement('div');
     el.className = `toast ${type}`;
     const icons = { success: '✓', error: '✕', warning: '!' };
-    el.innerHTML = `<span>${icons[type] || '●'}</span><span>${message}</span>`;
+    el.innerHTML = `<div class="toast-icon">${icons[type] || '●'}</div><span>${message}</span>`;
     container.appendChild(el);
     setTimeout(() => {
       el.style.animation = 'toastOut 0.3s ease forwards';

@@ -7,16 +7,15 @@ const Charts = (() => {
   const instances = {};
 
   const getThemeColors = () => {
-    const s = document.documentElement;
     const computed = getComputedStyle(document.documentElement);
     return {
-      income: '#10b981',
-      expense: '#f43f5e',
-      balance: '#3b82f6',
-      accent: '#6366f1',
-      text: computed.getPropertyValue('--text-secondary').trim() || '#94a3b8',
-      grid: computed.getPropertyValue('--border').trim() || '#1e293b',
-      bg: computed.getPropertyValue('--bg-card').trim() || '#111827'
+      income:  '#00d68f',
+      expense: '#ff4d6d',
+      balance: '#4da6ff',
+      accent:  '#4f8ef7',
+      text:    computed.getPropertyValue('--text-secondary').trim() || '#8899b0',
+      grid:    computed.getPropertyValue('--border-low').trim() || 'rgba(255,255,255,0.07)',
+      bg:      computed.getPropertyValue('--bg-card').trim() || '#111827'
     };
   };
 
@@ -30,8 +29,8 @@ const Charts = (() => {
   const globalDefaults = () => {
     const c = getThemeColors();
     Chart.defaults.color = c.text;
-    Chart.defaults.font.family = "'DM Sans', sans-serif";
-    Chart.defaults.font.size = 12;
+    Chart.defaults.font.family = "'Space Grotesk', sans-serif";
+    Chart.defaults.font.size = 11;
   };
 
   // Cash Flow Line/Bar Chart
@@ -95,7 +94,7 @@ const Charts = (() => {
     globalDefaults();
 
     const COLORS = [
-      '#6366f1','#f43f5e','#10b981','#f59e0b','#3b82f6',
+      '#4f8ef7','#ff4d6d','#00d68f','#ffba08','#4da6ff',
       '#a78bfa','#34d399','#fb923c','#38bdf8','#e879f9'
     ];
 
