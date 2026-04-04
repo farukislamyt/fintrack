@@ -16,7 +16,7 @@ const Goals = (() => {
     const all = getAll();
     const idx = all.findIndex(g => g.id === data.id);
     if (idx > -1) all[idx] = { ...all[idx], ...data, updatedAt: new Date().toISOString() };
-    else all.push({ id: data.id || Utils.uid(), createdAt: new Date().toISOString(), ...data });
+    else all.push({ ...data, id: data.id || Utils.uid(), createdAt: new Date().toISOString() });
     save(all);
   };
 

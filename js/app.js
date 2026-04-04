@@ -199,7 +199,20 @@ const Nav = {
 const Settings = {
   load: () => {
     const saved = Storage.get('settings');
-    if (saved) AppState.settings = { ...AppState.settings, ...saved };
+    if (saved) {
+      // Deep-merge: preserve default categories, merge with saved
+      const merged = { ...AppState.settings, ...saved };
+      // Merge category arrays (union) so no custom categories are lost
+      if (saved.incomeCategories) {
+        const allIncome = new Set([...AppState.settings.incomeCategories, ...saved.incomeCategories]);
+        merged.incomeCategories = [...allIncome].sort();
+      }
+      if (saved.expenseCategories) {
+        const allExpense = new Set([...AppState.settings.expenseCategories, ...saved.expenseCategories]);
+        merged.expenseCategories = [...allExpense].sort();
+      }
+      AppState.settings = merged;
+    }
   },
 
   save: () => {
@@ -556,9 +569,9 @@ const App = {
     Nav.init();
 
     // Clear-all-data: override centralized handler
-    document.getElementById('confirmDeleteBtn')?.addEventListener('click', (e) => {
+    document.getElementById('confirmDeleteBtn')?.addEventListener('click', async (e) => {
       if (e.currentTarget.dataset.pendingType === 'clearAll') {
-        Storage.clear();
+        await Storage.clear();
         Settings.load();
         App.refreshAll();
         Modal.close('confirmModal');
@@ -583,7 +596,9 @@ const App = {
     const hash = location.hash.replace('#', '');
     const validPages = ['dashboard','transactions','budget','goals','reports','settings'];
 
+    // Seed sample data BEFORE processing recurring or navigating
     App.seedSampleData();
+    Transactions.processRecurring();
 
     if (hash && validPages.includes(hash)) {
       Nav.goTo(hash);

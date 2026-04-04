@@ -271,6 +271,98 @@ body {
   z-index:299;
 }
 
+/* ── 6b. MOBILE RESPONSIVE ───────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .sidebar-overlay.visible {
+    display: block;
+  }
+  .sidebar-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .layout {
+    margin-left: 0 !important;
+  }
+  .hamburger {
+    display: flex;
+  }
+  .topbar {
+    padding: 0 16px;
+  }
+  .main-content {
+    padding: 16px;
+  }
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .cards-grid--3 {
+    grid-template-columns: 1fr;
+  }
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .budget-overview {
+    grid-template-columns: 1fr;
+  }
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+  .filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-wrap {
+    min-width: 100%;
+  }
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .page-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .page-header h1 {
+    font-size: 1.2rem;
+  }
+  .cat-name {
+    width: 100px;
+  }
+  .goal-name {
+    font-size: .9rem;
+  }
+  .data-table {
+    font-size: .78rem;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 8px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .card-amount {
+    font-size: 1.2rem;
+  }
+  .modal {
+    max-height: 90vh;
+    border-radius: var(--r-lg);
+  }
+  .modal-body {
+    padding: 16px;
+  }
+}
+
 /* ── 7. TOPBAR ─────────────────────────────────────────────── */
 .topbar {
   position:sticky; top:0; z-index:100;
@@ -626,7 +718,7 @@ canvas { max-height:220px; }
 
 /* Table cell variants */
 .txn-date-cell { display:flex; flex-direction:column; gap:1px; }
-.txn-date-main { font-size:.84rem; color:var(--text-secondary); font-family:var(--font-mono); font-size:.78rem; }
+.txn-date-main { font-size:.78rem; color:var(--text-secondary); font-family:var(--font-mono); }
 .txn-date-rel  { font-size:.7rem;  color:var(--text-muted); }
 
 .txn-desc-wrap { display:flex; flex-direction:column; gap:2px; }

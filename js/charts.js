@@ -309,10 +309,14 @@ const Charts = (() => {
 
   // ── Update all on theme change ─────────────────────────
   const refreshTheme = () => {
-    setDefaults();
-    Object.values(instances).forEach(chart => {
-      try { chart.update('none'); } catch (_) {}
-    });
+    // Destroy all existing chart instances and re-render
+    // Chart.js bakes in colors at creation time; update() won't re-read CSS vars
+    const savedCanvases = Object.keys(instances);
+    Object.keys(instances).forEach(id => destroy(id));
+    // Re-render dashboard charts after theme change
+    if (typeof App !== 'undefined' && App.refreshDashboard) {
+      App.refreshDashboard();
+    }
   };
 
   return {

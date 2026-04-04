@@ -14,7 +14,7 @@ const Budget = (() => {
     const all = getAll();
     const idx = all.findIndex(b => b.id === data.id);
     if (idx > -1) all[idx] = { ...all[idx], ...data };
-    else all.push({ id: data.id || Utils.uid(), ...data });
+    else all.push({ ...data, id: data.id || Utils.uid() });
     save(all);
   };
 

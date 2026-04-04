@@ -27,9 +27,9 @@ const Transactions = (() => {
       all[idx] = { ...all[idx], ...data, updatedAt: new Date().toISOString() };
     } else {
       all.unshift({
+        ...data,
         id: data.id || Utils.uid(),
         createdAt: new Date().toISOString(),
-        ...data
       });
     }
     return save(all);
@@ -328,6 +328,46 @@ const Transactions = (() => {
       </div>`).join('');
   };
 
+  // ── Recurring Transactions Processing ────────────────
+  const processRecurring = () => {
+    const all = getAll();
+    const today = Utils.today();
+    const newTxns = [];
+
+    all.forEach(t => {
+      if (!t.recurring || !t.recurringFreq || !t.date) return;
+
+      const lastDate = t.lastGenerated || t.date;
+      let nextDate = Utils.addPeriod(lastDate, t.recurringFreq);
+
+      // Generate up to 12 future instances to catch missed periods
+      let count = 0;
+      while (nextDate <= today && count < 12) {
+        newTxns.push({
+          ...t,
+          id: Utils.uid(),        // New unique ID
+          date: nextDate,
+          createdAt: new Date().toISOString(),
+          lastGenerated: undefined,
+          sourceId: t.id,         // Track parent for reference
+        });
+        lastDate = nextDate;
+        nextDate = Utils.addPeriod(lastDate, t.recurringFreq);
+        count++;
+      }
+
+      // Update lastGenerated on parent
+      if (newTxns.length > 0) {
+        t.lastGenerated = newTxns[newTxns.length - 1].date;
+      }
+    });
+
+    if (newTxns.length > 0) {
+      const updated = [...newTxns, ...all];
+      save(updated);
+    }
+  };
+
   // ── Event delegation (NO inline handlers) ─────────────
   const init = () => {
     // Form submit
@@ -387,17 +427,7 @@ const Transactions = (() => {
       if (!isNaN(page) && page >= 1) goPage(page);
     });
 
-    // ── Confirm-modal delete button ────────────────────────
-    document.getElementById('confirmDeleteBtn')?.addEventListener('click', (e) => {
-      const id = e.currentTarget.dataset.pendingId;
-      if (!id) return;
-      remove(id);
-      Modal.close('confirmModal');
-      renderTable();
-      App.refreshDashboard();
-      Utils.toast('Transaction deleted', 'success');
-      delete e.currentTarget.dataset.pendingId;
-    });
+    // ── Confirm-modal delete is handled centrally by ConfirmModal in app.js
 
     // ── Inline field error clearing ────────────────────────
     ['txnAmount','txnDate','txnDescription','txnCategory'].forEach(id => {
@@ -409,7 +439,7 @@ const Transactions = (() => {
     });
   };
 
-  return { getAll, upsert, remove, bulkRemove, renderTable, renderRecent, openAdd, openEdit, confirmDelete, init };
+  return { getAll, upsert, remove, bulkRemove, processRecurring, renderTable, renderRecent, openAdd, openEdit, confirmDelete, init };
 })();
 
 window.Transactions = Transactions;

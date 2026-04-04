@@ -72,6 +72,21 @@ const Utils = (() => {
 
   const currentYear = () => new Date().getFullYear();
 
+  // ── Add period to date string ─────────────────────────
+  const addPeriod = (dateStr, freq) => {
+    const d = parseDate(dateStr);
+    if (freq === 'daily') {
+      d.setDate(d.getDate() + 1);
+    } else if (freq === 'weekly') {
+      d.setDate(d.getDate() + 7);
+    } else if (freq === 'monthly') {
+      d.setMonth(d.getMonth() + 1);
+    } else if (freq === 'yearly') {
+      d.setFullYear(d.getFullYear() + 1);
+    }
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  };
+
   // ── Filter by period ───────────────────────────────────
   const filterByPeriod = (transactions, period) => {
     const now   = new Date();
@@ -240,7 +255,7 @@ const Utils = (() => {
 
   return {
     uid, formatCurrency, formatDate, formatRelativeDate, parseDate,
-    today, currentMonth, currentYear,
+    today, currentMonth, currentYear, addPeriod,
     filterByPeriod, summarize, groupByCategory, groupByMonth, groupByDay,
     toast, MONTHS, MONTHS_FULL, debounce, download, toCSV, escHtml,
     clamp, deepClone, abbrevNumber
