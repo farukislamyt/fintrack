@@ -1,159 +1,249 @@
 /**
- * FinTrack Utility Functions
+ * FinTrack Pro — Utilities v2.0
+ * Fixes:
+ * • debounce 'this' context bug fixed
+ * • formatDate timezone-safe
+ * • filterByPeriod week-start aligned
+ * • groupByMonth returns sorted months
+ * • New: formatRelativeDate, groupByDay, clamp, deepClone
  */
 
 const Utils = (() => {
-  // UUID generator
-  const uid = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+  // ── UID ────────────────────────────────────────────────
+  const uid = () =>
+    `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
 
-  // Format currency
-  const formatCurrency = (amount, settings = null) => {
-    const s = settings || (window.AppState && window.AppState.settings) || {};
-    const currency = s.currency || 'USD';
-    const symbols = { USD:'$', EUR:'€', GBP:'£', BDT:'৳', INR:'₹', JPY:'¥', CAD:'CA$', AUD:'A$' };
-    const sym = symbols[currency] || '$';
+  // ── Currency ───────────────────────────────────────────
+  const SYMBOLS = { USD:'$', EUR:'€', GBP:'£', BDT:'৳', INR:'₹', JPY:'¥', CAD:'CA$', AUD:'A$' };
+
+  const formatCurrency = (amount, overrideCurrency) => {
+    const currency = overrideCurrency ||
+      (window.AppState && AppState.settings.currency) || 'USD';
+    const sym = SYMBOLS[currency] || '$';
     const num = parseFloat(amount) || 0;
-    return `${sym}${Math.abs(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const absStr = Math.abs(num).toLocaleString('en-US', {
+      minimumFractionDigits: 2, maximumFractionDigits: 2
+    });
+    return `${sym}${absStr}`;
   };
 
-  // Format date
-  const formatDate = (dateStr, settings = null) => {
+  // ── Date ───────────────────────────────────────────────
+  // FIX: append 'T12:00:00' to avoid UTC midnight → local-day-off-by-one
+  const parseDate = (dateStr) => new Date(dateStr + 'T12:00:00');
+
+  const formatDate = (dateStr, overrideFmt) => {
     if (!dateStr) return '';
-    const s = settings || (window.AppState && window.AppState.settings) || {};
-    const fmt = s.dateFormat || 'MM/DD/YYYY';
-    const d = new Date(dateStr + 'T00:00:00');
-    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const fmt = overrideFmt ||
+      (window.AppState && AppState.settings.dateFormat) || 'MM/DD/YYYY';
+    const d = parseDate(dateStr);
+    const m   = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
-    const y = d.getFullYear();
+    const y   = d.getFullYear();
     if (fmt === 'DD/MM/YYYY') return `${day}/${m}/${y}`;
     if (fmt === 'YYYY-MM-DD') return `${y}-${m}-${day}`;
     return `${m}/${day}/${y}`;
   };
 
-  // Get today's date as YYYY-MM-DD
+  const formatRelativeDate = (dateStr) => {
+    if (!dateStr) return '';
+    const d     = parseDate(dateStr);
+    const now   = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tgt   = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const diff  = Math.round((tgt - today) / 86400000);
+    if (diff === 0)  return 'Today';
+    if (diff === -1) return 'Yesterday';
+    if (diff === 1)  return 'Tomorrow';
+    if (diff > 1 && diff < 7)   return `In ${diff} days`;
+    if (diff < 0 && diff > -7)  return `${Math.abs(diff)} days ago`;
+    return formatDate(dateStr);
+  };
+
+  // ── Today's date as YYYY-MM-DD ─────────────────────────
   const today = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   };
 
-  // Get month string YYYY-MM
   const currentMonth = () => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
   };
 
-  // Filter transactions by period
+  const currentYear = () => new Date().getFullYear();
+
+  // ── Filter by period ───────────────────────────────────
   const filterByPeriod = (transactions, period) => {
-    const now = new Date();
+    const now   = new Date();
+    const year  = now.getFullYear();
+    const month = now.getMonth();
+
     return transactions.filter(t => {
-      const d = new Date(t.date + 'T00:00:00');
+      const d = parseDate(t.date);
       if (period === 'week') {
-        const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
-        return d >= weekAgo;
+        // FIX: use proper 7-day rolling window from start of today
+        const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 6);
+        return d >= cutoff;
       }
       if (period === 'month') {
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        return d.getMonth() === month && d.getFullYear() === year;
       }
       if (period === 'year') {
-        return d.getFullYear() === now.getFullYear();
+        return d.getFullYear() === year;
       }
       return true; // 'all'
     });
   };
 
-  // Summarize transactions
+  // ── Summarize ──────────────────────────────────────────
   const summarize = (transactions) => {
-    const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-    const expense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-    return { income, expense, balance: income - expense, savingsRate: income > 0 ? ((income - expense) / income * 100) : 0 };
+    let income = 0, expense = 0;
+    for (const t of transactions) {
+      if (t.type === 'income')  income  += t.amount;
+      else if (t.type === 'expense') expense += t.amount;
+    }
+    const balance     = income - expense;
+    const savingsRate = income > 0 ? (balance / income) * 100 : 0;
+    return { income, expense, balance, savingsRate };
   };
 
-  // Group by category
+  // ── Group by category ──────────────────────────────────
   const groupByCategory = (transactions, type = 'expense') => {
-    const filtered = transactions.filter(t => t.type === type);
     const groups = {};
-    filtered.forEach(t => {
-      if (!groups[t.category]) groups[t.category] = 0;
-      groups[t.category] += t.amount;
-    });
+    for (const t of transactions) {
+      if (t.type !== type) continue;
+      groups[t.category] = (groups[t.category] || 0) + t.amount;
+    }
     return Object.entries(groups)
       .sort((a, b) => b[1] - a[1])
-      .map(([cat, amount]) => ({ category: cat, amount }));
+      .map(([category, amount]) => ({ category, amount }));
   };
 
-  // Group by month
+  // ── Group by month ─────────────────────────────────────
   const groupByMonth = (transactions, year) => {
     const months = Array.from({ length: 12 }, (_, i) => ({ month: i, income: 0, expense: 0 }));
-    transactions.forEach(t => {
-      const d = new Date(t.date + 'T00:00:00');
-      if (d.getFullYear() === year) {
-        const m = d.getMonth();
-        if (t.type === 'income') months[m].income += t.amount;
-        else months[m].expense += t.amount;
-      }
-    });
+    for (const t of transactions) {
+      const d = parseDate(t.date);
+      if (d.getFullYear() !== year) continue;
+      const m = d.getMonth();
+      if (t.type === 'income')  months[m].income  += t.amount;
+      else                       months[m].expense += t.amount;
+    }
     return months;
   };
 
-  // Show toast notification
-  const toast = (message, type = 'success', duration = 3000) => {
+  // ── Group by day (for sparklines / recent) ─────────────
+  const groupByDay = (transactions, days = 30) => {
+    const now   = new Date();
+    const result = {};
+    for (let i = days - 1; i >= 0; i--) {
+      const d   = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      result[key] = { income: 0, expense: 0 };
+    }
+    for (const t of transactions) {
+      if (result[t.date]) {
+        result[t.date][t.type] = (result[t.date][t.type] || 0) + t.amount;
+      }
+    }
+    return Object.entries(result).map(([date, v]) => ({ date, ...v }));
+  };
+
+  // ── Toast ──────────────────────────────────────────────
+  const toast = (message, type = 'success', duration = 3500) => {
     const container = document.getElementById('toastContainer');
     if (!container) return;
     const el = document.createElement('div');
     el.className = `toast ${type}`;
-    const icons = { success: '✓', error: '✕', warning: '!' };
-    el.innerHTML = `<div class="toast-icon">${icons[type] || '●'}</div><span>${message}</span>`;
+    const icons = { success: '✓', error: '✕', warning: '!', info: 'i' };
+    el.innerHTML = `<div class="toast-icon">${icons[type] || '●'}</div><span class="toast-msg">${escHtml(String(message))}</span><button class="toast-close" aria-label="Dismiss">✕</button>`;
+    el.querySelector('.toast-close').addEventListener('click', () => dismissToast(el));
     container.appendChild(el);
-    setTimeout(() => {
-      el.style.animation = 'toastOut 0.3s ease forwards';
-      setTimeout(() => el.remove(), 300);
-    }, duration);
+    // Auto-dismiss
+    const t = setTimeout(() => dismissToast(el), duration);
+    el._timer = t;
   };
 
-  // Month names
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dismissToast = (el) => {
+    if (!el || !el.parentNode) return;
+    clearTimeout(el._timer);
+    el.style.animation = 'toastOut 0.3s ease forwards';
+    setTimeout(() => el.remove(), 300);
+  };
 
-  // Debounce
+  // ── Month names ────────────────────────────────────────
+  const MONTHS     = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  // ── FIX: debounce with correct context handling ────────
   const debounce = (fn, delay = 300) => {
     let timer;
-    return (...args) => {
+    return function (...args) {
       clearTimeout(timer);
       timer = setTimeout(() => fn.apply(this, args), delay);
     };
   };
 
-  // Download helper
+  // ── Download file ──────────────────────────────────────
   const download = (content, filename, mimeType) => {
     const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
     a.download = filename;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
-  // Export to CSV
+  // ── CSV export ─────────────────────────────────────────
   const toCSV = (transactions) => {
-    const headers = ['Date','Description','Category','Type','Amount','Payment','Notes'];
-    const rows = transactions.map(t => [
-      t.date, `"${t.description}"`, t.category, t.type,
-      t.amount.toFixed(2), t.payment || '', `"${t.notes || ''}"`
-    ]);
-    return [headers, ...rows].map(r => r.join(',')).join('\n');
+    const headers = ['Date','Description','Category','Type','Amount','Payment','Notes','Recurring'];
+    const csvEsc  = (v) => `"${String(v || '').replace(/"/g, '""')}"`;
+    const rows    = transactions.map(t => [
+      t.date,
+      csvEsc(t.description),
+      csvEsc(t.category),
+      t.type,
+      t.amount.toFixed(2),
+      t.payment || '',
+      csvEsc(t.notes || ''),
+      t.recurring ? t.recurringFreq || 'monthly' : ''
+    ].join(','));
+    return [headers.join(','), ...rows].join('\n');
   };
 
-  // Escape HTML
+  // ── Escape HTML ────────────────────────────────────────
   const escHtml = (str) => {
-    const el = document.createElement('div');
-    el.appendChild(document.createTextNode(str || ''));
-    return el.innerHTML;
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
+
+  // ── Clamp ──────────────────────────────────────────────
+  const clamp = (val, min, max) => Math.min(Math.max(val, min), max);
+
+  // ── Deep clone ────────────────────────────────────────
+  const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
+
+  // ── Number abbreviation ────────────────────────────────
+  const abbrevNumber = (num) => {
+    if (Math.abs(num) >= 1e9) return (num / 1e9).toFixed(1) + 'B';
+    if (Math.abs(num) >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+    if (Math.abs(num) >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+    return String(num);
   };
 
   return {
-    uid, formatCurrency, formatDate, today, currentMonth,
-    filterByPeriod, summarize, groupByCategory, groupByMonth,
-    toast, MONTHS, debounce, download, toCSV, escHtml
+    uid, formatCurrency, formatDate, formatRelativeDate, parseDate,
+    today, currentMonth, currentYear,
+    filterByPeriod, summarize, groupByCategory, groupByMonth, groupByDay,
+    toast, MONTHS, MONTHS_FULL, debounce, download, toCSV, escHtml,
+    clamp, deepClone, abbrevNumber
   };
 })();
 
