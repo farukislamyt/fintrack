@@ -1136,6 +1136,273 @@ canvas { max-height:220px; }
 ::-webkit-scrollbar-thumb:hover { background:var(--border-mid); }
 ::selection { background:var(--accent); color:#fff; }
 
+/* ── 30. ABOUT / VERSION / DEVELOPER ──────────────────────── */
+.about-section {
+  display:flex; align-items:center; gap:16px;
+  margin-bottom:18px;
+}
+.about-app-icon {
+  width:64px; height:64px; flex-shrink:0;
+  border-radius:var(--r-lg);
+  overflow:hidden;
+  box-shadow:0 0 20px var(--accent-glow);
+  border:1px solid var(--border-low);
+}
+.about-app-icon img {
+  width:100%; height:100%; object-fit:cover;
+}
+.about-app-info {
+  display:flex; flex-direction:column; gap:2px;
+}
+.about-app-name {
+  font-size:1.15rem; font-weight:700;
+  letter-spacing:-.03em; color:var(--text-primary);
+}
+.about-version {
+  font-family:var(--font-mono); font-size:.78rem;
+  color:var(--accent-hi); font-weight:500;
+}
+.about-build-date {
+  font-size:.72rem; color:var(--text-muted); font-weight:400;
+}
+
+.about-desc {
+  font-size:.82rem; color:var(--text-secondary);
+  line-height:1.65; margin-bottom:18px;
+}
+
+.about-features {
+  display:flex; flex-direction:column; gap:12px;
+  margin-bottom:6px;
+}
+.about-feature-item {
+  display:flex; align-items:flex-start; gap:12px;
+  padding:12px 14px; border-radius:var(--r-md);
+  background:var(--bg-raised); border:1px solid var(--border-xlow);
+  transition:border-color var(--t-fast);
+}
+.about-feature-item:hover { border-color:var(--border-low); }
+.about-feature-icon {
+  width:36px; height:36px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.1rem;
+  background:var(--bg-card); border-radius:var(--r-sm);
+  border:1px solid var(--border-xlow);
+}
+.about-feature-item strong {
+  display:block; font-size:.84rem; font-weight:600;
+  color:var(--text-primary); margin-bottom:2px;
+}
+.about-feature-item p {
+  font-size:.75rem; color:var(--text-muted); line-height:1.5;
+  margin:0;
+}
+
+.about-divider {
+  border:none; border-top:1px solid var(--border-xlow);
+  margin:18px 0;
+}
+
+.about-developer {
+  margin-bottom:0;
+}
+.about-dev-label {
+  font-size:.63rem; font-weight:600; text-transform:uppercase;
+  letter-spacing:.10em; color:var(--text-muted);
+  margin-bottom:10px;
+}
+.about-dev-card {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 14px; border-radius:var(--r-md);
+  background:var(--bg-raised); border:1px solid var(--border-low);
+  text-decoration:none; transition:all var(--t-fast) var(--spring);
+  cursor:pointer;
+}
+.about-dev-card:hover {
+  border-color:var(--accent); background:var(--balance-soft);
+  transform:translateY(-1px); box-shadow:var(--shadow-sm);
+}
+.about-dev-avatar {
+  width:48px; height:48px; flex-shrink:0;
+  border-radius:50%; overflow:hidden;
+  background:var(--bg-card); border:2px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+}
+.about-dev-avatar img {
+  width:100%; height:100%; object-fit:cover;
+}
+.about-dev-info { flex:1; }
+.about-dev-name {
+  font-size:.88rem; font-weight:600;
+  color:var(--text-primary); letter-spacing:-.01em;
+}
+.about-dev-handle {
+  font-size:.74rem; color:var(--text-muted); font-weight:500;
+}
+.about-dev-arrow {
+  color:var(--text-muted); transition:color var(--t-fast);
+}
+.about-dev-card:hover .about-dev-arrow { color:var(--accent); }
+
+.about-tech {
+  margin-bottom:0;
+}
+.about-tech-label {
+  font-size:.63rem; font-weight:600; text-transform:uppercase;
+  letter-spacing:.10em; color:var(--text-muted);
+  margin-bottom:10px;
+}
+.about-tech-tags {
+  display:flex; flex-wrap:wrap; gap:6px;
+}
+.tech-tag {
+  padding:4px 10px; border-radius:var(--r-full);
+  background:var(--bg-raised); border:1px solid var(--border-low);
+  font-size:.72rem; font-weight:500;
+  color:var(--text-secondary); letter-spacing:.01em;
+  transition:all var(--t-fast);
+}
+.tech-tag:hover { border-color:var(--accent); color:var(--accent); }
+
+.about-links {
+  display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;
+}
+.about-link-btn {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:8px 16px; border-radius:var(--r-md);
+  background:var(--bg-raised); border:1px solid var(--border);
+  color:var(--text-secondary); font-family:var(--font-ui);
+  font-size:.8rem; font-weight:500;
+  text-decoration:none; cursor:pointer;
+  transition:all var(--t-fast) var(--spring);
+}
+.about-link-btn:hover {
+  border-color:var(--accent); color:var(--accent);
+  background:var(--balance-soft);
+  transform:translateY(-1px);
+}
+.about-link-btn svg {
+  flex-shrink:0;
+}
+
+/* ── 31. PWA INSTALL BANNER ───────────────────────────────── */
+.pwa-banner {
+  position:fixed; bottom:0; left:0; right:0;
+  z-index:400; padding:12px 16px;
+  animation:slideUp .4s var(--spring);
+}
+.pwa-banner[hidden] { display:none; }
+
+.pwa-banner-content {
+  max-width:480px; margin:0 auto;
+  display:flex; align-items:center; gap:12px;
+  background:var(--bg-overlay); border:1px solid var(--border);
+  border-radius:var(--r-lg); padding:12px 16px;
+  box-shadow:var(--shadow-lg);
+  backdrop-filter:blur(20px);
+}
+.pwa-banner-icon {
+  width:40px; height:40px; flex-shrink:0;
+  border-radius:var(--r-md);
+}
+.pwa-banner-text {
+  flex:1; display:flex; flex-direction:column; gap:1px;
+}
+.pwa-banner-text strong {
+  font-size:.82rem; font-weight:600; color:var(--text-primary);
+}
+.pwa-banner-text span {
+  font-size:.72rem; color:var(--text-muted);
+}
+.pwa-banner-install {
+  background:var(--accent); color:#fff; border:none;
+  border-radius:var(--r-md); padding:0 14px; height:32px;
+  font-family:var(--font-ui); font-size:.78rem; font-weight:600;
+  cursor:pointer; white-space:nowrap;
+  transition:all var(--t-fast) var(--spring);
+}
+.pwa-banner-install:hover { background:var(--accent-hi); }
+.pwa-banner-dismiss {
+  background:none; border:none; color:var(--text-muted);
+  cursor:pointer; font-size:.82rem; padding:4px;
+  border-radius:var(--r-xs); transition:color var(--t-fast);
+  line-height:1;
+}
+.pwa-banner-dismiss:hover { color:var(--text-primary); }
+
+/* ── 32. UPDATE BANNER ─────────────────────────────────────── */
+.update-banner {
+  position:fixed; top:0; left:0; right:0;
+  z-index:450; padding:0;
+  background:var(--accent);
+  animation:slideDown .3s var(--spring);
+}
+.update-banner[hidden] { display:none; }
+
+.update-banner-content {
+  display:flex; align-items:center; justify-content:center;
+  gap:14px; padding:10px 20px;
+  max-width:600px; margin:0 auto;
+}
+.update-banner-text {
+  font-size:.82rem; font-weight:500; color:#fff;
+}
+.update-banner-btn {
+  background:#fff; color:var(--accent); border:none;
+  border-radius:var(--r-sm); padding:0 14px; height:28px;
+  font-family:var(--font-ui); font-size:.76rem; font-weight:700;
+  cursor:pointer; white-space:nowrap;
+  transition:opacity var(--t-fast);
+}
+.update-banner-btn:hover { opacity:.88; }
+.update-banner-dismiss {
+  background:rgba(255,255,255,.15); border:none;
+  color:#fff; cursor:pointer; font-size:.82rem;
+  padding:4px 6px; border-radius:var(--r-xs);
+  transition:background var(--t-fast); line-height:1;
+}
+.update-banner-dismiss:hover { background:rgba(255,255,255,.25); }
+
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes slideDown {
+  from { opacity:0; transform:translateY(-100%); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── 33. PWA RESPONSIVE ────────────────────────────────────── */
+@media (max-width: 768px) {
+  .pwa-banner-content {
+    max-width:100%;
+  }
+  .about-section {
+    flex-direction:column; text-align:center;
+  }
+  .about-feature-item {
+    flex-direction:column; align-items:center; text-align:center;
+  }
+  .about-dev-card {
+    justify-content:center;
+  }
+  .about-links {
+    justify-content:center;
+  }
+}
+
+@media (max-width: 480px) {
+  .pwa-banner-icon {
+    width:32px; height:32px;
+  }
+  .pwa-banner-text strong {
+    font-size:.76rem;
+  }
+  .pwa-banner-text span {
+    font-size:.68rem;
+  }
+}
+
 /* ── 29. RESPONSIVE ────────────────────────────────────────── */
 @media(max-width:1280px) {
   .cards-grid { grid-template-columns:repeat(2,1fr); }

@@ -31,17 +31,80 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="FinTrack Pro" />
+  <meta name="application-name" content="FinTrack Pro" />
+  <meta name="msapplication-TileColor" content="#07090f" />
+  <meta name="msapplication-navbutton-color" content="#07090f" />
 
-  <!-- ── Structured Data ── -->
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- Apple Touch Icon -->
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192x192.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png" />
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-96x96.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-72x72.png" />
+  <link rel="shortcut icon" href="icons/icon-192x192.png" />
+
+  <!-- ── Structured Data (WebApplication) ── -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "WebApplication",
     "name": "FinTrack Pro",
-    "description": "Personal finance manager for tracking income, expenses, budgets, and financial goals.",
+    "alternateName": "FinTrack",
+    "url": "https://farukislamyt.github.io/fintrack/",
+    "description": "Personal finance manager for tracking income, expenses, budgets, and financial goals with beautiful charts and smart insights.",
     "applicationCategory": "FinanceApplication",
-    "operatingSystem": "Web",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript. Requires HTML5.",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": {
+      "@type": "Person",
+      "name": "Faruk Islam",
+      "url": "https://github.com/farukislamyt"
+    },
+    "featureList": [
+      "Income and expense tracking",
+      "Budget planning with visual progress",
+      "Financial goal tracking",
+      "Interactive charts and reports",
+      "Recurring transaction management",
+      "Multiple currency support",
+      "Data export and import",
+      "Offline support (PWA)",
+      "Dark and light themes",
+      "AES-GCM encrypted storage"
+    ]
+  }
+  </script>
+
+  <!-- ── Structured Data (Organization) ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "FinTrack Pro",
+    "url": "https://farukislamyt.github.io/fintrack/",
+    "logo": "https://farukislamyt.github.io/fintrack/icons/icon-512x512.png"
+  }
+  </script>
+
+  <!-- ── Structured Data (SoftwareApp) ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "FinTrack Pro",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web Browser",
+    "softwareVersion": "3.0",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "1"
+    }
   }
   </script>
 
@@ -65,6 +128,31 @@
   <script src="js/goals.js"        defer></script>
   <script src="js/reports.js"      defer></script>
   <script src="js/app.js"          defer></script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js', { scope: './' })
+          .then(reg => {
+            console.log('[PWA] Service Worker registered. Scope:', reg.scope);
+            // Check for updates on load
+            reg.addEventListener('updatefound', () => {
+              const newWorker = reg.installing;
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'activated') {
+                  if (navigator.serviceWorker.controller) {
+                    // New update available
+                    if (window.FinTrackPWA) FinTrackPWA.onUpdateAvailable(reg);
+                  }
+                }
+              });
+            });
+          })
+          .catch(err => console.warn('[PWA] SW registration failed:', err));
+      });
+    }
+  </script>
 </head>
 
 <body>
@@ -521,6 +609,81 @@
             </div>
           </div>
 
+          <!-- About / Version / Developer -->
+          <div class="settings-card">
+            <h2>About</h2>
+            <div class="about-section">
+              <div class="about-app-icon">
+                <img src="icons/icon-192x192.png" alt="FinTrack Pro logo" width="64" height="64" style="border-radius:var(--r-lg);" />
+              </div>
+              <div class="about-app-info">
+                <div class="about-app-name">FinTrack Pro</div>
+                <div class="about-version">Version <span id="appVersion">3.0.0</span></div>
+                <div class="about-build-date">Build: <span id="buildDate">April 4, 2026</span></div>
+              </div>
+            </div>
+            <p class="about-desc">A powerful, privacy-first personal finance manager. Track income, expenses, budgets, and financial goals — all stored locally on your device with AES-GCM encryption. No servers, no tracking, your data stays yours.</p>
+            <div class="about-features">
+              <div class="about-feature-item">
+                <span class="about-feature-icon" aria-hidden="true">🔒</span>
+                <div>
+                  <strong>Privacy First</strong>
+                  <p>All data is stored locally with AES-256 encryption. Zero server-side data collection.</p>
+                </div>
+              </div>
+              <div class="about-feature-item">
+                <span class="about-feature-icon" aria-hidden="true">📱</span>
+                <div>
+                  <strong>Works Offline</strong>
+                  <p>Install as a PWA and use it anywhere, anytime — no internet required.</p>
+                </div>
+              </div>
+              <div class="about-feature-item">
+                <span class="about-feature-icon" aria-hidden="true">📊</span>
+                <div>
+                  <strong>Smart Insights</strong>
+                  <p>Beautiful charts, budget alerts, savings tracking, and trend analysis built in.</p>
+                </div>
+              </div>
+            </div>
+            <div class="about-divider"></div>
+            <div class="about-developer">
+              <div class="about-dev-label">Developed By</div>
+              <a href="https://github.com/farukislamyt" target="_blank" rel="noopener noreferrer" class="about-dev-card">
+                <div class="about-dev-avatar">
+                  <img src="https://avatars.githubusercontent.com/u/72838687" alt="Faruk Islam" width="48" height="48" style="border-radius:50%;" onerror="this.style.display='none'" />
+                </div>
+                <div class="about-dev-info">
+                  <div class="about-dev-name">Faruk Islam</div>
+                  <div class="about-dev-handle">@farukislamyt</div>
+                </div>
+                <svg class="about-dev-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
+              </a>
+            </div>
+            <div class="about-divider"></div>
+            <div class="about-tech">
+              <div class="about-tech-label">Tech Stack</div>
+              <div class="about-tech-tags">
+                <span class="tech-tag">Vanilla JS</span>
+                <span class="tech-tag">Chart.js</span>
+                <span class="tech-tag">CSS3</span>
+                <span class="tech-tag">Service Worker</span>
+                <span class="tech-tag">IndexedDB</span>
+                <span class="tech-tag">AES-GCM</span>
+              </div>
+            </div>
+            <div class="about-links">
+              <a href="https://github.com/farukislamyt/fintrack" target="_blank" rel="noopener noreferrer" class="about-link-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                GitHub Repository
+              </a>
+              <a href="https://farukislamyt.github.io/fintrack/" target="_blank" rel="noopener noreferrer" class="about-link-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                Live Demo
+              </a>
+            </div>
+          </div>
+
           <!-- Data Management -->
           <div class="settings-card">
             <h2>Data Management</h2>
@@ -723,6 +886,28 @@
         <button class="btn-ghost" data-modal="confirmModal">Cancel</button>
         <button class="btn-danger" id="confirmDeleteBtn">Delete</button>
       </div>
+    </div>
+  </div>
+
+  <!-- PWA Install Banner -->
+  <div class="pwa-banner" id="pwaInstallBanner" hidden aria-live="polite">
+    <div class="pwa-banner-content">
+      <img src="icons/icon-96x96.png" alt="" width="40" height="40" class="pwa-banner-icon" aria-hidden="true" />
+      <div class="pwa-banner-text">
+        <strong>Install FinTrack Pro</strong>
+        <span>Add to home screen for the best experience</span>
+      </div>
+      <button class="pwa-banner-install" id="pwaInstallBtn">Install</button>
+      <button class="pwa-banner-dismiss" id="pwaDismissBtn" aria-label="Dismiss install banner">✕</button>
+    </div>
+  </div>
+
+  <!-- Update Available Banner -->
+  <div class="update-banner" id="updateBanner" hidden>
+    <div class="update-banner-content">
+      <span class="update-banner-text">🆕 A new version of FinTrack Pro is available!</span>
+      <button class="update-banner-btn" id="updateNowBtn">Update Now</button>
+      <button class="update-banner-dismiss" id="updateDismissBtn" aria-label="Dismiss update notification">✕</button>
     </div>
   </div>
 

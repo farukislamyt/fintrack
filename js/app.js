@@ -1,11 +1,13 @@
 /**
- * FinTrack Pro — App v2.0
+ * FinTrack Pro — App v3.0
  * • Centralized confirm-modal handler (fixes duplicate handlers)
  * • Theme persistence with system-preference detection
  * • Dashboard insights panel
  * • Keyboard navigation
  * • Storage usage indicator
  * • Error boundary for module failures
+ * • PWA install prompt & update notification
+ * • About section with version & developer info
  */
 
 // ── App State ──────────────────────────────────────────────
@@ -608,7 +610,80 @@ const App = {
 
     // Listen for storage changes from other tabs
     window.addEventListener('storage', () => App.refreshAll());
+
+    // ── PWA Install Prompt & Update Banner ──────────────────
+    FinTrackPWA.init();
   }
 };
+
+// ── PWA Module ────────────────────────────────────────────────
+const FinTrackPWA = {
+  deferredPrompt: null,
+
+  init: () => {
+    window.FinTrackPWA = FinTrackPWA;
+
+    // ── Install prompt ─────────────────────────────────────
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      FinTrackPWA.deferredPrompt = e;
+      // Don't show if already dismissed in this session
+      if (!sessionStorage.getItem('ftp_pwa_dismissed')) {
+        const banner = document.getElementById('pwaInstallBanner');
+        if (banner) {
+          setTimeout(() => { banner.hidden = false; }, 3000);
+        }
+      }
+    });
+
+    document.getElementById('pwaInstallBtn')?.addEventListener('click', async () => {
+      if (!FinTrackPWA.deferredPrompt) return;
+      FinTrackPWA.deferredPrompt.prompt();
+      const result = await FinTrackPWA.deferredPrompt.userChoice;
+      if (result.outcome === 'accepted') {
+        Utils.toast('✓ FinTrack Pro installed!', 'success', 4000);
+      }
+      FinTrackPWA.deferredPrompt = null;
+      document.getElementById('pwaInstallBanner') && (document.getElementById('pwaInstallBanner').hidden = true);
+    });
+
+    document.getElementById('pwaDismissBtn')?.addEventListener('click', () => {
+      document.getElementById('pwaInstallBanner') && (document.getElementById('pwaInstallBanner').hidden = true);
+      sessionStorage.setItem('ftp_pwa_dismissed', '1');
+    });
+
+    // ── Update banner ──────────────────────────────────────
+    document.getElementById('updateNowBtn')?.addEventListener('click', () => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(reg => {
+          if (reg && reg.waiting) {
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+        window.location.reload();
+      }
+    });
+
+    document.getElementById('updateDismissBtn')?.addEventListener('click', () => {
+      document.getElementById('updateBanner') && (document.getElementById('updateBanner').hidden = true);
+    });
+
+    // Listen for messages from SW
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'NEW_VERSION') {
+          const banner = document.getElementById('updateBanner');
+          if (banner) banner.hidden = false;
+        }
+      });
+    }
+  },
+
+  onUpdateAvailable: (reg) => {
+    const banner = document.getElementById('updateBanner');
+    if (banner) banner.hidden = false;
+  }
+};
+window.FinTrackPWA = FinTrackPWA;
 
 document.addEventListener('DOMContentLoaded', App.init);
