@@ -600,7 +600,7 @@ const App = {
 
     // Seed sample data BEFORE processing recurring or navigating
     App.seedSampleData();
-    Transactions.processRecurring();
+    try { Transactions.processRecurring(); } catch (err) { console.warn('[App] processRecurring failed:', err); }
 
     if (hash && validPages.includes(hash)) {
       Nav.goTo(hash);

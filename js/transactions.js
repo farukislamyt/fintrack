@@ -337,7 +337,7 @@ const Transactions = (() => {
     all.forEach(t => {
       if (!t.recurring || !t.recurringFreq || !t.date) return;
 
-      const lastDate = t.lastGenerated || t.date;
+      let lastDate = t.lastGenerated || t.date;
       let nextDate = Utils.addPeriod(lastDate, t.recurringFreq);
 
       // Generate up to 12 future instances to catch missed periods
