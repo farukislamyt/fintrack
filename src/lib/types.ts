@@ -2,7 +2,7 @@ export interface Transaction {
   id: string;
   type: 'income' | 'expense';
   amount: number;
-  date: string; // YYYY-MM-DD
+  date: string;
   description: string;
   category: string;
   payment: 'cash' | 'card' | 'bank' | 'mobile' | 'other';
@@ -29,6 +29,28 @@ export interface Goal {
   emoji: string;
 }
 
+export interface Loan {
+  id: string;
+  name: string;
+  type: 'mortgage' | 'car' | 'personal' | 'student' | 'other';
+  principal: number;
+  annualRate: number;
+  termMonths: number;
+  startDate: string;
+  emoji: string;
+  notes?: string;
+}
+
+export interface LoanPayment {
+  id: string;
+  loanId: string;
+  date: string;
+  amount: number;
+  principalPortion: number;
+  interestPortion: number;
+  remainingBalance: number;
+}
+
 export interface Settings {
   userName: string;
   currency: CurrencyCode;
@@ -36,16 +58,19 @@ export interface Settings {
   savingsTarget: number;
   incomeCategories: string[];
   expenseCategories: string[];
+  onboardingComplete: boolean;
 }
 
 export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'BDT' | 'INR' | 'JPY' | 'CAD' | 'AUD';
 
-export type PageId = 'dashboard' | 'transactions' | 'budget' | 'goals' | 'reports' | 'settings';
+export type PageId = 'dashboard' | 'transactions' | 'budget' | 'goals' | 'loans' | 'reports' | 'settings';
 
 export interface FinTrackState {
   transactions: Transaction[];
   budgets: Budget[];
   goals: Goal[];
+  loans: Loan[];
+  loanPayments: LoanPayment[];
   settings: Settings;
   currentPage: PageId;
   period: 'week' | 'month' | 'year' | 'all';
@@ -62,6 +87,12 @@ export interface FinTrackState {
   updateGoal: (g: Goal) => void;
   removeGoal: (id: string) => void;
   addGoalContribution: (id: string, amount: number) => void;
+  withdrawGoalContribution: (id: string, amount: number) => void;
+  // Loan actions
+  addLoan: (l: Omit<Loan, 'id'> & { id?: string }) => void;
+  updateLoan: (l: Loan) => void;
+  removeLoan: (id: string) => void;
+  addLoanPayment: (p: Omit<LoanPayment, 'id'> & { id?: string }) => void;
   // Settings
   updateSettings: (s: Partial<Settings>) => void;
   addCategory: (type: 'income' | 'expense', name: string) => void;

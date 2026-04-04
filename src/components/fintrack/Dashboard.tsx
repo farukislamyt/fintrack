@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Info,
+  Landmark,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +38,7 @@ import {
   MONTHS,
   abbrevNumber,
   currentYear,
+  calculateMonthlyPayment,
 } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import type { Transaction } from '@/lib/types';
@@ -44,7 +46,7 @@ import type { Transaction } from '@/lib/types';
 const PIE_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316', '#6366f1', '#14b8a6', '#e11d48', '#84cc16', '#a855f7'];
 
 export default function Dashboard() {
-  const { transactions, budgets, settings, period, setPeriod } = useFinTrackStore();
+  const { transactions, budgets, settings, period, setPeriod, loans } = useFinTrackStore();
 
   const filteredTxns = useMemo(() => filterByPeriod(transactions, period), [transactions, period]);
   const summary = useMemo(() => summarize(filteredTxns), [filteredTxns]);
@@ -82,6 +84,18 @@ export default function Dashboard() {
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt))
       .slice(0, 8);
   }, [transactions]);
+
+  // Loan summary for dashboard
+  const loanSummary = useMemo(() => {
+    if (loans.length === 0) return { totalDebt: 0, monthlyPayments: 0 };
+    let totalDebt = 0;
+    let monthlyPayments = 0;
+    for (const loan of loans) {
+      totalDebt += loan.principal;
+      monthlyPayments += calculateMonthlyPayment(loan.principal, loan.annualRate, loan.termMonths);
+    }
+    return { totalDebt, monthlyPayments };
+  }, [loans]);
 
   // Smart insights
   const insights = useMemo(() => {
@@ -124,6 +138,14 @@ export default function Dashboard() {
       });
     }
 
+    if (loanSummary.monthlyPayments > 0) {
+      items.push({
+        icon: <Landmark className="size-4 text-purple-400" />,
+        text: `Your monthly loan payments total ${formatCurrency(loanSummary.monthlyPayments, settings.currency)} across ${loans.length} loan${loans.length > 1 ? 's' : ''}.`,
+        type: 'info',
+      });
+    }
+
     if (items.length === 0) {
       items.push({
         icon: <Info className="size-4 text-blue-400" />,
@@ -133,7 +155,7 @@ export default function Dashboard() {
     }
 
     return items.slice(0, 4);
-  }, [summary, budgets, filteredTxns, settings]);
+  }, [summary, budgets, filteredTxns, settings, loanSummary, loans]);
 
   return (
     <div className="space-y-6">
@@ -162,7 +184,7 @@ export default function Dashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -225,6 +247,21 @@ export default function Dashboard() {
               summary.savingsRate >= settings.savingsTarget ? 'text-emerald-500' : 'text-amber-500'
             )}>
               {summary.savingsRate.toFixed(1)}%
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-purple-500/10">
+                <Landmark className="size-5 text-purple-500" />
+              </div>
+              <Badge variant="secondary" className="text-xs">debt</Badge>
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">Total Debt</p>
+            <p className="text-2xl font-bold text-purple-500">
+              {formatCurrency(loanSummary.totalDebt, settings.currency)}
             </p>
           </CardContent>
         </Card>

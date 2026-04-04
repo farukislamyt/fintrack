@@ -149,3 +149,55 @@ export function daysUntil(dateStr: string): number {
   const tgt = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   return Math.round((tgt.getTime() - today.getTime()) / 86400000);
 }
+
+// ── Loan Calculations ──────────────────────────────────────
+
+export function calculateMonthlyPayment(principal: number, annualRate: number, termMonths: number): number {
+  if (annualRate === 0) return principal / termMonths;
+  const r = annualRate / 100 / 12;
+  return principal * (r * Math.pow(1 + r, termMonths)) / (Math.pow(1 + r, termMonths) - 1);
+}
+
+export function calculateAmortizationSchedule(principal: number, annualRate: number, termMonths: number, startDate: string): { month: number; date: string; payment: number; principal: number; interest: number; balance: number }[] {
+  const monthlyRate = annualRate / 100 / 12;
+  const monthlyPayment = calculateMonthlyPayment(principal, annualRate, termMonths);
+  const schedule: { month: number; date: string; payment: number; principal: number; interest: number; balance: number }[] = [];
+  let balance = principal;
+  const start = new Date(startDate + 'T12:00:00');
+
+  for (let i = 1; i <= termMonths; i++) {
+    const interest = balance * monthlyRate;
+    const principalPortion = monthlyPayment - interest;
+    balance = Math.max(balance - principalPortion, 0);
+    const payDate = new Date(start.getFullYear(), start.getMonth() + i, 1);
+    schedule.push({
+      month: i,
+      date: `${payDate.getFullYear()}-${String(payDate.getMonth() + 1).padStart(2, '0')}-${String(payDate.getDate()).padStart(2, '0')}`,
+      payment: Math.round(monthlyPayment * 100) / 100,
+      principal: Math.round(principalPortion * 100) / 100,
+      interest: Math.round(interest * 100) / 100,
+      balance: Math.round(balance * 100) / 100,
+    });
+  }
+  return schedule;
+}
+
+export function calculateLoanProgress(loan: { principal: number; annualRate: number; termMonths: number; startDate: string }, payments: { amount: number }[]): { paidTotal: number; remaining: number; progress: number; totalInterest: number } {
+  const monthlyPayment = calculateMonthlyPayment(loan.principal, loan.annualRate, loan.termMonths);
+  const paidTotal = payments.reduce((sum, p) => sum + p.amount, 0);
+  const remaining = Math.max(loan.principal - paidTotal, 0);
+  const progress = loan.principal > 0 ? Math.min((paidTotal / loan.principal) * 100, 100) : 0;
+  const schedule = calculateAmortizationSchedule(loan.principal, loan.annualRate, loan.termMonths, loan.startDate);
+  const totalInterest = schedule.reduce((sum, s) => sum + s.interest, 0);
+  return { paidTotal, remaining, progress, totalInterest };
+}
+
+export function monthsPassedSince(dateStr: string): number {
+  const start = new Date(dateStr + 'T12:00:00');
+  const now = new Date();
+  return (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
+}
+
+export function formatPercentage(val: number, decimals = 1): string {
+  return `${val.toFixed(decimals)}%`;
+}

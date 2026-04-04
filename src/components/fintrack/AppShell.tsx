@@ -16,6 +16,7 @@ import {
   DollarSign,
   Download,
   TrendingUp,
+  Landmark,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -32,12 +33,15 @@ import GoalsPage from './GoalsPage';
 import ReportsPage from './ReportsPage';
 import SettingsPage from './SettingsPage';
 import TransactionForm from './TransactionForm';
+import LoansPage from './LoansPage';
+import Onboarding from './Onboarding';
 
 const NAV_ITEMS: { id: PageId; label: string; icon: React.ReactNode }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="size-5" /> },
   { id: 'transactions', label: 'Transactions', icon: <ArrowLeftRight className="size-5" /> },
   { id: 'budget', label: 'Budget', icon: <PiggyBank className="size-5" /> },
   { id: 'goals', label: 'Goals', icon: <Target className="size-5" /> },
+  { id: 'loans', label: 'Loans', icon: <Landmark className="size-5" /> },
   { id: 'reports', label: 'Reports', icon: <BarChart3 className="size-5" /> },
   { id: 'settings', label: 'Settings', icon: <Settings className="size-5" /> },
 ];
@@ -47,6 +51,7 @@ const PAGE_TITLES: Record<PageId, string> = {
   transactions: 'Transactions',
   budget: 'Budget',
   goals: 'Goals',
+  loans: 'Loans',
   reports: 'Reports',
   settings: 'Settings',
 };
@@ -146,7 +151,7 @@ function ExportDataButton() {
 }
 
 export default function AppShell() {
-  const { currentPage, initSampleData, processRecurring } = useFinTrackStore();
+  const { currentPage, initSampleData, processRecurring, settings } = useFinTrackStore();
   const { theme, setTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showTransactionForm, setShowTransactionForm] = useState(false);
@@ -163,6 +168,7 @@ export default function AppShell() {
       case 'transactions': return <Transactions />;
       case 'budget': return <BudgetPage />;
       case 'goals': return <GoalsPage />;
+      case 'loans': return <LoansPage />;
       case 'reports': return <ReportsPage />;
       case 'settings': return <SettingsPage />;
       default: return <Dashboard />;
@@ -226,7 +232,7 @@ export default function AppShell() {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-7xl p-4 lg:p-6">
+          <div className="mx-auto max-w-7xl p-4 lg:p-6 animate-slide-up">
             {renderPage()}
           </div>
         </main>
@@ -237,6 +243,9 @@ export default function AppShell() {
         open={showTransactionForm}
         onOpenChange={setShowTransactionForm}
       />
+
+      {/* Onboarding Overlay */}
+      {!settings.onboardingComplete && <Onboarding />}
     </div>
   );
 }

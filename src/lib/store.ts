@@ -1,7 +1,11 @@
-import { type FinTrackState, type Transaction, type Budget, type Goal, type Settings, type CurrencyCode } from './types';
+import { type FinTrackState, type Transaction, type Budget, type Goal, type Loan, type LoanPayment, type Settings, type CurrencyCode } from './types';
 
 const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = {
   USD: '$', EUR: '€', GBP: '£', BDT: '৳', INR: '₹', JPY: '¥', CAD: 'CA$', AUD: 'A$',
+};
+
+const LOAN_EMOJIS: Record<string, string> = {
+  mortgage: '🏠', car: '🚗', personal: '💰', student: '🎓', other: '📋',
 };
 
 const DEFAULT_INCOME_CATS = ['Salary', 'Freelance', 'Business', 'Investment', 'Rental', 'Gift', 'Other Income'];
@@ -14,6 +18,7 @@ const DEFAULT_SETTINGS: Settings = {
   savingsTarget: 20,
   incomeCategories: [...DEFAULT_INCOME_CATS],
   expenseCategories: [...DEFAULT_EXPENSE_CATS],
+  onboardingComplete: false,
 };
 
 function uid(): string {
@@ -25,11 +30,6 @@ function todayStr(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function currentMonth(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
-
 function addPeriod(dateStr: string, freq: string): string {
   const d = new Date(dateStr + 'T12:00:00');
   if (freq === 'daily') d.setDate(d.getDate() + 1);
@@ -39,34 +39,37 @@ function addPeriod(dateStr: string, freq: string): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-// Load from localStorage
-function loadState(): { transactions: Transaction[]; budgets: Budget[]; goals: Goal[]; settings: Settings } {
-  if (typeof window === 'undefined') return { transactions: [], budgets: [], goals: [], settings: DEFAULT_SETTINGS };
+function loadState(): { transactions: Transaction[]; budgets: Budget[]; goals: Goal[]; loans: Loan[]; loanPayments: LoanPayment[]; settings: Settings } {
+  if (typeof window === 'undefined') return { transactions: [], budgets: [], goals: [], loans: [], loanPayments: [], settings: DEFAULT_SETTINGS };
   try {
     const t = localStorage.getItem('ftp_transactions');
     const b = localStorage.getItem('ftp_budgets');
     const g = localStorage.getItem('ftp_goals');
+    const l = localStorage.getItem('ftp_loans');
+    const lp = localStorage.getItem('ftp_loan_payments');
     const s = localStorage.getItem('ftp_settings');
     let settings = s ? JSON.parse(s) : DEFAULT_SETTINGS;
-    // Merge categories (union) so no custom categories are lost
     if (settings.incomeCategories) {
       settings.incomeCategories = [...new Set([...DEFAULT_INCOME_CATS, ...settings.incomeCategories])].sort();
     }
     if (settings.expenseCategories) {
       settings.expenseCategories = [...new Set([...DEFAULT_EXPENSE_CATS, ...settings.expenseCategories])].sort();
     }
+    if (settings.onboardingComplete === undefined) settings.onboardingComplete = true;
     return {
       transactions: t ? JSON.parse(t) : [],
       budgets: b ? JSON.parse(b) : [],
       goals: g ? JSON.parse(g) : [],
+      loans: l ? JSON.parse(l) : [],
+      loanPayments: lp ? JSON.parse(lp) : [],
       settings: { ...DEFAULT_SETTINGS, ...settings },
     };
   } catch {
-    return { transactions: [], budgets: [], goals: [], settings: DEFAULT_SETTINGS };
+    return { transactions: [], budgets: [], goals: [], loans: [], loanPayments: [], settings: DEFAULT_SETTINGS };
   }
 }
 
-function seedSampleData(): { transactions: Transaction[]; budgets: Budget[]; goals: Goal[] } {
+function seedSampleData(): { transactions: Transaction[]; budgets: Budget[]; goals: Goal[]; loans: Loan[] } {
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, '0');
@@ -86,7 +89,6 @@ function seedSampleData(): { transactions: Transaction[]; budgets: Budget[]; goa
     { id: uid(), type: 'expense', amount: 30, date: `${y}-${m}-15`, description: 'Doctor Visit', category: 'Healthcare', payment: 'cash', createdAt: new Date().toISOString() },
     { id: uid(), type: 'expense', amount: 100, date: `${y}-${m}-18`, description: 'Online Course', category: 'Education', payment: 'card', createdAt: new Date().toISOString() },
     { id: uid(), type: 'expense', amount: 250, date: `${y}-${m}-20`, description: 'Weekend Trip', category: 'Travel', payment: 'card', createdAt: new Date().toISOString() },
-    // Previous month
     { id: uid(), type: 'income', amount: 5000, date: `${pm}-01`, description: 'Monthly Salary', category: 'Salary', payment: 'bank', createdAt: new Date().toISOString() },
     { id: uid(), type: 'expense', amount: 1200, date: `${pm}-01`, description: 'Rent Payment', category: 'Housing', payment: 'bank', createdAt: new Date().toISOString() },
     { id: uid(), type: 'expense', amount: 290, date: `${pm}-05`, description: 'Grocery Shopping', category: 'Food & Dining', payment: 'card', createdAt: new Date().toISOString() },
@@ -108,7 +110,12 @@ function seedSampleData(): { transactions: Transaction[]; budgets: Budget[]; goa
     { id: uid(), name: 'New Laptop', target: 2000, saved: 800, deadline: '2026-06-01', emoji: '💻' },
   ];
 
-  return { transactions: txns, budgets, goals };
+  const loans: Loan[] = [
+    { id: uid(), name: 'Car Loan', type: 'car', principal: 25000, annualRate: 5.5, termMonths: 60, startDate: '2025-06-01', emoji: '🚗' },
+    { id: uid(), name: 'Student Loan', type: 'student', principal: 15000, annualRate: 4.2, termMonths: 120, startDate: '2024-09-01', emoji: '🎓' },
+  ];
+
+  return { transactions: txns, budgets, goals, loans };
 }
 
 import { create } from 'zustand';
@@ -120,6 +127,8 @@ export const useFinTrackStore = create<FinTrackState>((set, get) => {
     transactions: saved.transactions,
     budgets: saved.budgets,
     goals: saved.goals,
+    loans: saved.loans,
+    loanPayments: saved.loanPayments,
     settings: saved.settings,
     currentPage: 'dashboard',
     period: 'month',
@@ -176,8 +185,35 @@ export const useFinTrackStore = create<FinTrackState>((set, get) => {
     })),
 
     addGoalContribution: (id, amount) => set((s) => ({
-      goals: s.goals.map(g => g.id === id ? { ...g, saved: g.saved + amount } : g),
+      goals: s.goals.map(g => g.id === id ? { ...g, saved: Math.min(g.saved + amount, g.target) } : g),
     })),
+
+    withdrawGoalContribution: (id, amount) => set((s) => ({
+      goals: s.goals.map(g => g.id === id ? { ...g, saved: Math.max(g.saved - amount, 0) } : g),
+    })),
+
+    addLoan: (l) => set((s) => {
+      const loan: Loan = { ...l, id: l.id || uid() } as Loan;
+      const exists = s.loans.find(x => x.id === loan.id);
+      const loans = exists
+        ? s.loans.map(x => x.id === loan.id ? loan : x)
+        : [...s.loans, loan];
+      return { loans };
+    }),
+
+    updateLoan: (l) => set((s) => ({
+      loans: s.loans.map(x => x.id === l.id ? l : x),
+    })),
+
+    removeLoan: (id) => set((s) => ({
+      loans: s.loans.filter(x => x.id !== id),
+      loanPayments: s.loanPayments.filter(p => p.loanId !== id),
+    })),
+
+    addLoanPayment: (p) => set((s) => {
+      const payment: LoanPayment = { ...p, id: p.id || uid() } as LoanPayment;
+      return { loanPayments: [...s.loanPayments, payment] };
+    }),
 
     updateSettings: (partial) => set((s) => ({
       settings: { ...s.settings, ...partial },
@@ -198,7 +234,7 @@ export const useFinTrackStore = create<FinTrackState>((set, get) => {
     setPage: (page) => set({ currentPage: page }),
     setPeriod: (period) => set({ period }),
 
-    clearAll: () => set({ transactions: [], budgets: [], goals: [], settings: DEFAULT_SETTINGS }),
+    clearAll: () => set({ transactions: [], budgets: [], goals: [], loans: [], loanPayments: [], settings: DEFAULT_SETTINGS }),
 
     importData: (data) => {
       try {
@@ -206,6 +242,8 @@ export const useFinTrackStore = create<FinTrackState>((set, get) => {
         if (data.transactions) partial.transactions = data.transactions as Transaction[];
         if (data.budgets) partial.budgets = data.budgets as Budget[];
         if (data.goals) partial.goals = data.goals as Goal[];
+        if (data.loans) partial.loans = data.loans as Loan[];
+        if (data.loanPayments) partial.loanPayments = data.loanPayments as LoanPayment[];
         if (data.settings) {
           const saved = data.settings as Settings;
           partial.settings = { ...DEFAULT_SETTINGS, ...saved };
@@ -216,8 +254,8 @@ export const useFinTrackStore = create<FinTrackState>((set, get) => {
 
     initSampleData: () => {
       if (get().transactions.length > 0) return;
-      const { transactions, budgets, goals } = seedSampleData();
-      set({ transactions, budgets, goals });
+      const { transactions, budgets, goals, loans } = seedSampleData();
+      set({ transactions, budgets, goals, loans });
     },
 
     processRecurring: () => {
@@ -252,16 +290,17 @@ export const useFinTrackStore = create<FinTrackState>((set, get) => {
   };
 });
 
-// Persist to localStorage on every state change
 if (typeof window !== 'undefined') {
   useFinTrackStore.subscribe((state) => {
     try {
       localStorage.setItem('ftp_transactions', JSON.stringify(state.transactions));
       localStorage.setItem('ftp_budgets', JSON.stringify(state.budgets));
       localStorage.setItem('ftp_goals', JSON.stringify(state.goals));
+      localStorage.setItem('ftp_loans', JSON.stringify(state.loans));
+      localStorage.setItem('ftp_loan_payments', JSON.stringify(state.loanPayments));
       localStorage.setItem('ftp_settings', JSON.stringify(state.settings));
     } catch { /* quota exceeded */ }
   });
 }
 
-export { CURRENCY_SYMBOLS, uid, todayStr, currentMonth, DEFAULT_INCOME_CATS, DEFAULT_EXPENSE_CATS };
+export { CURRENCY_SYMBOLS, uid, todayStr, DEFAULT_INCOME_CATS, DEFAULT_EXPENSE_CATS, LOAN_EMOJIS };
