@@ -5,6 +5,7 @@
 const Transactions = (() => {
   let sortField = 'date', sortDir = -1, curPage = 1;
   const PER = 12;
+  let renderDebounce = null;
 
   const getAll = () => Storage.get('transactions', []);
   const save   = (d) => Storage.set('transactions', d);
@@ -27,9 +28,11 @@ const Transactions = (() => {
   const remove     = (id) => save(getAll().filter(t => t.id !== id));
   const bulkRemove = (ids) => { const s = new Set(ids); save(getAll().filter(t => !s.has(t.id))); };
 
-  // ── Filters & Sort ──────────────────────────────────────
+  // ── Optimized Filters & Sort ──────────────────────────────
   const applyFilters = (txns, { search, type, category, month }) => {
     const q = (search || '').toLowerCase();
+    if (!q && !type && !category && !month) return txns; // Fast path: no filters
+    
     return txns.filter(t => {
       if (q && !t.description.toLowerCase().includes(q) && !t.category.toLowerCase().includes(q) && !(t.notes||'').toLowerCase().includes(q)) return false;
       if (type && type !== 'all' && t.type !== type) return false;
@@ -212,10 +215,15 @@ const Transactions = (() => {
       if (inp) inp.classList.toggle('invalid', !!msg);
       if (msg) ok = false;
     };
-    setErr('txnAmount',      (!amount||amount<=0) ? 'Enter a valid amount' : '');
-    setErr('txnDate',        !date               ? 'Select a date'        : '');
-    setErr('txnDescription', !desc               ? 'Enter a description'  : '');
-    setErr('txnCategory',    !cat                ? 'Select a category'    : '');
+    
+    // ── Enhanced Validation ──────────────────────────────────
+    const validAmount = Utils.isValidAmount(amount);
+    const validDate = Utils.isValidDate(date);
+    
+    setErr('txnAmount',      !validAmount ? 'Enter a valid amount (> 0)' : '');
+    setErr('txnDate',        !validDate   ? 'Select a valid date'       : '');
+    setErr('txnDescription', !desc        ? 'Enter a description'       : '');
+    setErr('txnCategory',    !cat         ? 'Select a category'         : '');
     if (!ok) return;
 
     upsert({ id, type, amount, date, description: desc, category: cat, payment: pay, notes, recurring: recur, recurringFreq: freq });

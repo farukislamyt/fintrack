@@ -1445,3 +1445,404 @@ details[open] .loan-history-toggle::before { transform: rotate(90deg); }
   }
   .progress-fill { transition: none !important; }
 }
+
+/* ================================================================
+   ENHANCED UI/UX IMPROVEMENTS FOR MOBILE & ACCESSIBILITY
+   ================================================================ */
+
+/* Better form inputs */
+input:invalid, textarea:invalid, select:invalid {
+  border-color: var(--expense) !important;
+}
+
+input.invalid, textarea.invalid {
+  border-color: var(--expense) !important;
+  background: rgba(240, 62, 94, 0.05);
+}
+
+::-webkit-input-placeholder { color: var(--text-muted); font-size: 0.9em; }
+:-moz-placeholder { color: var(--text-muted); font-size: 0.9em; opacity: 1; }
+::-moz-placeholder { color: var(--text-muted); font-size: 0.9em; opacity: 1; }
+:-ms-input-placeholder { color: var(--text-muted); }
+
+/* Better button focus states */
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Toast improvements */
+.toast { box-shadow: var(--shadow-lg); }
+.toast.success { background: rgba(0, 210, 138, 0.1); border-left: 3px solid var(--income); }
+.toast.error { background: rgba(240, 62, 94, 0.1); border-left: 3px solid var(--expense); }
+.toast.warning { background: rgba(245, 184, 0, 0.1); border-left: 3px solid var(--gold); }
+
+/* Card hover states */
+.card, .budget-item, .goal-card, .loan-card, .txn-item {
+  transition: all var(--t-base) var(--ease);
+}
+
+.card:hover, .budget-item:hover, .goal-card:hover, .loan-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Better empty states */
+.empty-state { 
+  text-align: center; padding: 40px 20px;
+  color: var(--text-muted);
+}
+
+.empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.6; }
+
+/* Loading skeleton improvements */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+/* Better modal styling */
+.modal-backdrop {
+  transition: opacity var(--t-base) var(--ease), 
+              background-color var(--t-base) var(--ease);
+}
+
+.modal-backdrop:not([hidden]) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Input error state visual feedback */
+.input-error { 
+  color: var(--expense); 
+  font-size: 0.8rem; 
+  margin-top: 4px;
+  animation: slideDown 200ms var(--ease);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Improved table for mobile */
+@media (max-width: 640px) {
+  #transactionTableBody { display: flex; flex-direction: column; gap: 8px; }
+  #transactionTableBody tr {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 12px;
+    background: var(--bg-card);
+  }
+  #transactionTableBody td {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border: none;
+  }
+  #transactionTableBody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+  }
+}
+
+/* Better button spacing on touch devices */
+@media (max-width: 768px) {
+  .action-btns { gap: 8px; }
+  .page-btn { min-width: 36px; }
+  button[type="submit"], .btn-primary {
+    min-height: 44px;
+  }
+}
+
+/* ================================================================
+   ONBOARDING SCREEN
+   ================================================================ */
+
+.modal--onboarding {
+  width: 100%;
+  max-width: 480px;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.onboarding-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  padding: 32px 24px;
+  gap: 28px;
+}
+
+.onboarding-welcome {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.onboarding-logo {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, var(--accent) 0%, #7c3aed 100%);
+  border-radius: var(--r-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 0 24px var(--accent-glow);
+}
+
+.onboarding-welcome h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+
+.onboarding-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.onboarding-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex: 1;
+}
+
+.onboarding-form .form-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.onboarding-form input[type="text"] {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  transition: all var(--t-base) var(--ease);
+}
+
+.onboarding-form input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.currency-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.currency-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--t-base) var(--ease);
+  min-height: 100px;
+}
+
+.currency-option:hover {
+  border-color: var(--accent);
+  background: rgba(59, 130, 246, 0.05);
+  color: var(--text-primary);
+}
+
+.currency-option.selected {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+  color: var(--text-primary);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.currency-flag {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.currency-code {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.currency-name {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.onboarding-features {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-low);
+  border-radius: var(--r-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.feature-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.btn-large {
+  padding: 12px 24px;
+  font-size: 1rem;
+  min-height: 48px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.onboarding-footer {
+  border-top: 1px solid var(--border-low);
+  padding-top: 16px;
+  text-align: center;
+}
+
+.onboarding-info {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.75rem;
+}
+
+.info-item strong {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.info-item small {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  margin-top: 2px;
+}
+
+.onboarding-tagline {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+  font-style: italic;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .modal--onboarding {
+    max-width: 100%;
+    max-height: 100vh;
+  }
+
+  .onboarding-container {
+    padding: 24px 16px;
+    gap: 20px;
+  }
+
+  .onboarding-welcome h1 {
+    font-size: 1.5rem;
+  }
+
+  .onboarding-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .currency-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .onboarding-logo {
+    width: 56px;
+    height: 56px;
+  }
+
+  .currency-option {
+    min-height: 90px;
+    padding: 12px 10px;
+  }
+
+  .currency-flag {
+    font-size: 1.5rem;
+  }
+
+  .onboarding-info {
+    gap: 16px;
+  }
+
+  .info-item {
+    font-size: 0.7rem;
+  }
+}
+
+/* ================================================================
+   PERFORMANCE OPTIMIZATIONS
+   ================================================================ */
+
+/* CSS containment for better paint performance */
+.card, .budget-item, .goal-card, .loan-card, .chart-container {
+  contain: layout style paint;
+}
+
+#transactionTableBody tr {
+  contain: layout style paint;
+}
+
+/* Optimize animations */
+.progress-fill {
+  will-change: width;
+  transform: translateZ(0);
+}
+
+/* Optimize specific selectors */
+.loan-card, .budget-item, .goal-card {
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Lazy load images if needed */
+img[loading="lazy"] {
+  display: block;
+}

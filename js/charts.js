@@ -1,17 +1,28 @@
 /**
  * FinTrack Pro — Charts v3.0
+ * OPTIMIZED: Memoized theme getter, efficient chart management
  */
 const Charts = (() => {
   const inst = {};
+  let themeCache = null;
+  let themeCacheTime = 0;
 
   const C = () => {
+    // Memoize theme colors for 1 second
+    const now = Date.now();
+    if (themeCache && (now - themeCacheTime) < 1000) {
+      return themeCache;
+    }
+    
     const s = getComputedStyle(document.documentElement);
-    return {
+    themeCache = {
       income:'#00d28a', expense:'#f03e5e', balance:'#3d9eff', gold:'#f5b800', accent:'#3b82f6',
       text:   s.getPropertyValue('--text-secondary').trim() || '#7d90a8',
       grid:   'rgba(255,255,255,0.055)',
       bg:     s.getPropertyValue('--bg-card').trim() || '#0f1520',
     };
+    themeCacheTime = now;
+    return themeCache;
   };
 
   const PALETTE = ['#3b82f6','#f03e5e','#00d28a','#f5b800','#3d9eff','#a78bfa','#34d399','#fb923c','#f472b6','#2dd4bf'];

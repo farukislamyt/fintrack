@@ -248,54 +248,59 @@ const Theme = {
 // ── Dashboard ──────────────────────────────────────────────
 const App = {
   refreshDashboard: () => {
-    const period = document.getElementById('dashPeriod')?.value || 'month';
-    const all    = Transactions.getAll();
-    const fil    = Utils.filterByPeriod(all, period);
-    const { income, expense, balance, savingsRate } = Utils.summarize(fil);
-    const target = AppState.settings.savingsTarget || 20;
-    const set = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+    try {
+      const period = document.getElementById('dashPeriod')?.value || 'month';
+      const all    = Transactions.getAll();
+      const fil    = Utils.filterByPeriod(all, period);
+      const { income, expense, balance, savingsRate } = Utils.summarize(fil);
+      const target = AppState.settings.savingsTarget || 20;
+      const set = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
 
-    set('totalIncome',   Utils.formatCurrency(income));
-    set('totalExpenses', Utils.formatCurrency(expense));
-    set('netBalance',    Utils.formatCurrency(balance));
-    set('savingsPercent', `${Math.round(savingsRate)}%`);
-    set('savingsGoal',    `Target: ${target}%`);
-    set('incomeChange',  `${fil.filter(t=>t.type==='income').length} transactions`);
-    set('expenseChange', `${fil.filter(t=>t.type==='expense').length} transactions`);
+      set('totalIncome',   Utils.formatCurrency(income));
+      set('totalExpenses', Utils.formatCurrency(expense));
+      set('netBalance',    Utils.formatCurrency(balance));
+      set('savingsPercent', `${Math.round(savingsRate)}%`);
+      set('savingsGoal',    `Target: ${target}%`);
+      set('incomeChange',  `${fil.filter(t=>t.type==='income').length} transactions`);
+      set('expenseChange', `${fil.filter(t=>t.type==='expense').length} transactions`);
 
-    const srEl = document.getElementById('savingsRate');
-    if (srEl) { srEl.textContent = balance>=0 ? '↑ Surplus' : '↓ Deficit'; srEl.style.color = balance>=0?'var(--income)':'var(--expense)'; }
+      const srEl = document.getElementById('savingsRate');
+      if (srEl) { srEl.textContent = balance>=0 ? '↑ Surplus' : '↓ Deficit'; srEl.style.color = balance>=0?'var(--income)':'var(--expense)'; }
 
-    const balEl = document.getElementById('sidebarBalanceAmount');
-    if (balEl) { balEl.textContent = Utils.formatCurrency(balance); balEl.style.color = balance>=0?'var(--income)':'var(--expense)'; }
+      const balEl = document.getElementById('sidebarBalanceAmount');
+      if (balEl) { balEl.textContent = Utils.formatCurrency(balance); balEl.style.color = balance>=0?'var(--income)':'var(--expense)'; }
 
-    const greet = document.getElementById('dashGreeting');
-    if (greet && AppState.settings.userName) {
-      const h = new Date().getHours();
-      greet.textContent = `${h<12?'Good morning':h<18?'Good afternoon':'Good evening'}, ${AppState.settings.userName}`;
-    }
+      const greet = document.getElementById('dashGreeting');
+      if (greet && AppState.settings.userName) {
+        const h = new Date().getHours();
+        greet.textContent = `${h<12?'Good morning':h<18?'Good afternoon':'Good evening'}, ${AppState.settings.userName}`;
+      }
 
-    const mn = Utils.groupByMonth(all, Utils.currentYear());
-    Charts.renderCashflow('cashflowChart', Utils.MONTHS, mn.map(m=>m.income), mn.map(m=>m.expense));
-    const cats = Utils.groupByCategory(fil, 'expense');
-    if (cats.length) Charts.renderCategory('categoryChart', cats.map(c=>c.category), cats.map(c=>c.amount));
+      const mn = Utils.groupByMonth(all, Utils.currentYear());
+      Charts.renderCashflow('cashflowChart', Utils.MONTHS, mn.map(m=>m.income), mn.map(m=>m.expense));
+      const cats = Utils.groupByCategory(fil, 'expense');
+      if (cats.length) Charts.renderCategory('categoryChart', cats.map(c=>c.category), cats.map(c=>c.amount));
 
-    App.renderInsights(fil, income, expense, balance, savingsRate, target);
-    Transactions.renderRecent(8, period);
+      App.renderInsights(fil, income, expense, balance, savingsRate, target);
+      Transactions.renderRecent(8, period);
 
-    // Loan summary on dashboard
-    const ls = document.getElementById('loanDashSummary');
-    if (ls) {
-      const s = Loans.getSummary();
-      if (s.active > 0) {
-        ls.hidden = false;
-        ls.innerHTML = `<div class="loan-dash-row">
-          <span class="loan-dash-item receive">📥 Receive: <strong>${Utils.formatCurrency(s.toReceive)}</strong></span>
-          <span class="loan-dash-item pay">📤 Pay: <strong>${Utils.formatCurrency(s.toPay)}</strong></span>
-          ${s.overdue>0?`<span class="loan-dash-item overdue">⚠ ${s.overdue} overdue</span>`:''}
-          <button class="link-btn" data-page="loans">View loans →</button>
-        </div>`;
-      } else { ls.hidden = true; }
+      // Loan summary on dashboard
+      const ls = document.getElementById('loanDashSummary');
+      if (ls) {
+        const s = Loans.getSummary();
+        if (s.active > 0) {
+          ls.hidden = false;
+          ls.innerHTML = `<div class="loan-dash-row">
+            <span class="loan-dash-item receive">📥 Receive: <strong>${Utils.formatCurrency(s.toReceive)}</strong></span>
+            <span class="loan-dash-item pay">📤 Pay: <strong>${Utils.formatCurrency(s.toPay)}</strong></span>
+            ${s.overdue>0?`<span class="loan-dash-item overdue">⚠ ${s.overdue} overdue</span>`:''}
+            <button class="link-btn" data-page="loans">View loans →</button>
+          </div>`;
+        } else { ls.hidden = true; }
+      }
+    } catch (err) {
+      console.error('[App] Dashboard refresh failed:', err);
+      Utils.toast('Failed to refresh dashboard', 'error');
     }
   },
 
@@ -335,31 +340,12 @@ const App = {
   },
 
   seedSampleData: () => {
+    // Seed data disabled - users should start clean
+    // If you want to restore sample data, uncomment the code below
+    /*
     if (Transactions.getAll().length > 0) return;
-    const now = new Date(), y = now.getFullYear();
-    const m  = String(now.getMonth()+1).padStart(2,'0');
-    const pm = now.getMonth()===0 ? `${y-1}-12` : `${y}-${String(now.getMonth()).padStart(2,'0')}`;
-    [
-      {type:'income', amount:5000, date:`${y}-${m}-01`, description:'Monthly Salary',   category:'Salary',         payment:'bank',   recurring:true,  recurringFreq:'monthly'},
-      {type:'income', amount:850,  date:`${y}-${m}-05`, description:'Freelance Project', category:'Freelance',      payment:'bank'},
-      {type:'income', amount:200,  date:`${y}-${m}-12`, description:'Stock Dividend',    category:'Investment',     payment:'bank'},
-      {type:'expense',amount:1200, date:`${y}-${m}-01`, description:'Rent Payment',      category:'Housing',        payment:'bank',   recurring:true,  recurringFreq:'monthly'},
-      {type:'expense',amount:320,  date:`${y}-${m}-03`, description:'Grocery Shopping',  category:'Food & Dining',  payment:'card'},
-      {type:'expense',amount:45,   date:`${y}-${m}-04`, description:'Internet Bill',     category:'Utilities',      payment:'card',   recurring:true,  recurringFreq:'monthly'},
-      {type:'expense',amount:80,   date:`${y}-${m}-06`, description:'Restaurant Dinner', category:'Food & Dining',  payment:'card'},
-      {type:'expense',amount:150,  date:`${y}-${m}-08`, description:'Transport',         category:'Transportation', payment:'mobile'},
-      {type:'expense',amount:60,   date:`${y}-${m}-10`, description:'Subscriptions',     category:'Entertainment',  payment:'card',   recurring:true,  recurringFreq:'monthly'},
-      {type:'expense',amount:200,  date:`${y}-${m}-14`, description:'Clothing',          category:'Shopping',       payment:'card'},
-      {type:'income', amount:5000, date:`${pm}-01`,     description:'Monthly Salary',    category:'Salary',         payment:'bank'},
-      {type:'expense',amount:1200, date:`${pm}-01`,     description:'Rent Payment',      category:'Housing',        payment:'bank'},
-      {type:'expense',amount:290,  date:`${pm}-05`,     description:'Groceries',         category:'Food & Dining',  payment:'card'},
-    ].forEach(s => Transactions.upsert({ ...s }));
-    [{category:'Food & Dining',amount:600},{category:'Transportation',amount:250},{category:'Entertainment',amount:150},{category:'Shopping',amount:300},{category:'Housing',amount:1500}]
-      .forEach(b => Budget.upsert({ ...b }));
-    Goals.upsert({ name:'Emergency Fund', target:10000, saved:3500, deadline:`${y+1}-12-31`, emoji:'💰' });
-    Goals.upsert({ name:'Dream Vacation',  target:5000,  saved:1200, deadline:`${y}-08-01`,   emoji:'✈️' });
-    Loans.upsert({ loanType:'given', personName:'John Doe',  amount:500,  date:`${y}-${m}-01`, dueDate:`${y}-06-30`, note:'Borrowed for rent', payments:[] });
-    Loans.upsert({ loanType:'taken', personName:'Mom',       amount:1000, date:`${pm}-15`,      dueDate:`${y}-12-31`, note:'Personal loan', payments:[{id:Utils.uid(),amount:200,date:`${y}-${m}-01`,note:'First installment',createdAt:new Date().toISOString()}] });
+    // ... sample data code ...
+    */
   },
 
   init: () => {
@@ -377,7 +363,10 @@ const App = {
     Settings.init();
     DataManager.init();
     document.getElementById('dashPeriod')?.addEventListener('change', App.refreshDashboard);
-    App.seedSampleData();
+    
+    // Initialize onboarding (only shows on first launch)
+    Onboarding.init();
+    
     const hash = location.hash.replace('#','');
     const valid = ['dashboard','transactions','budget','goals','loans','reports','settings'];
     Nav.goTo(valid.includes(hash) ? hash : 'dashboard');

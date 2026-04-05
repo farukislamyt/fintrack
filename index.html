@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark light" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
   <!-- SEO -->
-  <title>FinTrack Pro — Personal Finance Manager</title>
-  <meta name="description" content="FinTrack Pro: Track income, expenses, budgets, goals and loans. Beautiful charts, smart insights, PWA — all data stored privately on your device." />
-  <meta name="keywords" content="personal finance, budget tracker, expense manager, income tracker, financial goals, loan manager, money management" />
+  <title>FinTrack Pro — Personal Finance Manager | Budget, Goals & Loan Tracker</title>
+  <meta name="description" content="FinTrack Pro: Complete personal finance manager. Track income, expenses, budgets, savings goals, and loans. Beautiful analytics, smart insights, PWA, fully offline. No server, 100% private." />
+  <meta name="keywords" content="personal finance, budget tracker, expense manager, income tracker, financial goals, loan manager, money management, savings tracker, PWA finance" />
   <meta name="author" content="FinTrack Pro" />
   <meta name="robots" content="index, follow" />
 
@@ -16,6 +18,14 @@
   <meta property="og:title"       content="FinTrack Pro — Personal Finance Manager" />
   <meta property="og:description" content="Track income, expenses, budgets and goals with ease. Private, offline-ready, no server needed." />
   <meta property="og:image"       content="./icons/icon-512.png" />
+  <meta property="og:url"         content="https://fintrackpro.com" />
+  <meta property="og:site_name"   content="FinTrack Pro" />
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card"       content="summary_large_image" />
+  <meta name="twitter:title"      content="FinTrack Pro — Personal Finance Manager" />
+  <meta name="twitter:description" content="Complete personal finance management with budgets, goals, loans & more." />
+  <meta name="twitter:image"      content="./icons/icon-512.png" />
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json" />
@@ -28,7 +38,27 @@
 
   <!-- Structured Data -->
   <script type="application/ld+json">
-  {"@context":"https://schema.org","@type":"WebApplication","name":"FinTrack Pro","description":"Personal finance manager for tracking income, expenses, budgets, goals and loans.","applicationCategory":"FinanceApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "FinTrack Pro",
+    "description": "Complete personal finance manager for tracking income, expenses, budgets, savings goals, and loans.",
+    "applicationCategory": "FinanceApplication",
+    "applicationSubCategory": "Budget & Finance Tracker",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD",
+      "availability": "https://schema.org/InStock"
+    },
+    "screenshot": "https://fintrackpro.com/screenshot.png",
+    "isAccessibleForFree": true,
+    "maintainer": {
+      "@type": "Organization",
+      "name": "FinTrack Pro"
+    }
+  }
   </script>
 
   <!-- Fonts -->
@@ -50,6 +80,7 @@
   <script src="js/goals.js"        defer></script>
   <script src="js/loans.js"        defer></script>
   <script src="js/reports.js"      defer></script>
+  <script src="js/onboarding.js"   defer></script>
   <script src="js/app.js"          defer></script>
 
   <!-- SW Registration -->
@@ -552,6 +583,124 @@
         </div>
         <div class="modal-footer"><button type="button" class="btn-ghost" data-modal="loanModal">Cancel</button><button type="submit" class="btn-primary">Save Loan</button></div>
       </form>
+    </div>
+  </div>
+
+  <!-- Onboarding Modal -->
+  <div class="modal-backdrop" id="onboardingModal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" hidden aria-hidden="true">
+    <div class="modal modal--onboarding">
+      <div class="onboarding-container">
+        <!-- Welcome Section -->
+        <div class="onboarding-welcome">
+          <div class="onboarding-logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="40" height="40">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+              <polyline points="16 7 22 7 22 13"/>
+            </svg>
+          </div>
+          <h1 id="onboardingTitle">Welcome to FinTrack Pro</h1>
+          <p class="onboarding-subtitle">Your personal finance companion. Take control of your money.</p>
+        </div>
+
+        <!-- Setup Form -->
+        <form id="onboardingForm" class="onboarding-form">
+          <!-- Name Input -->
+          <div class="form-group">
+            <label for="onboardingName">What's your name?</label>
+            <input 
+              type="text" 
+              id="onboardingName" 
+              placeholder="Enter your name" 
+              maxlength="50"
+              autocomplete="name"
+              required
+              aria-required="true"
+            />
+          </div>
+
+          <!-- Currency Selection -->
+          <div class="form-group">
+            <label>Preferred Currency</label>
+            <div class="currency-grid">
+              <button type="button" class="currency-option" data-currency="USD" title="US Dollar">
+                <span class="currency-flag">🇺🇸</span>
+                <span class="currency-code">USD</span>
+                <span class="currency-name">Dollar</span>
+              </button>
+              <button type="button" class="currency-option" data-currency="EUR" title="Euro">
+                <span class="currency-flag">🇪🇺</span>
+                <span class="currency-code">EUR</span>
+                <span class="currency-name">Euro</span>
+              </button>
+              <button type="button" class="currency-option" data-currency="GBP" title="British Pound">
+                <span class="currency-flag">🇬🇧</span>
+                <span class="currency-code">GBP</span>
+                <span class="currency-name">Pound</span>
+              </button>
+              <button type="button" class="currency-option" data-currency="INR" title="Indian Rupee">
+                <span class="currency-flag">🇮🇳</span>
+                <span class="currency-code">INR</span>
+                <span class="currency-name">Rupee</span>
+              </button>
+              <button type="button" class="currency-option" data-currency="JPY" title="Japanese Yen">
+                <span class="currency-flag">🇯🇵</span>
+                <span class="currency-code">JPY</span>
+                <span class="currency-name">Yen</span>
+              </button>
+              <button type="button" class="currency-option" data-currency="BDT" title="Bangladeshi Taka">
+                <span class="currency-flag">🇧🇩</span>
+                <span class="currency-code">BDT</span>
+                <span class="currency-name">Taka</span>
+              </button>
+            </div>
+            <input type="hidden" id="onboardingCurrency" value="USD" />
+          </div>
+
+          <!-- Features Overview -->
+          <div class="onboarding-features">
+            <div class="feature-item">
+              <span class="feature-icon">📊</span>
+              <span>Track income & expenses</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">💰</span>
+              <span>Set savings goals</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">📋</span>
+              <span>Manage budgets & loans</span>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">📱</span>
+              <span>100% private & offline</span>
+            </div>
+          </div>
+
+          <!-- CTA Button -->
+          <button type="button" class="btn-primary btn-large" id="onboardingGetStartedBtn">
+            Get Started →
+          </button>
+        </form>
+
+        <!-- Footer Info -->
+        <div class="onboarding-footer">
+          <div class="onboarding-info">
+            <span class="info-item">
+              <strong>FinTrack Pro</strong>
+              <small>v3.0.1</small>
+            </span>
+            <span class="info-item">
+              <strong>Built by</strong>
+              <small>FinTrack Team</small>
+            </span>
+            <span class="info-item">
+              <strong>License</strong>
+              <small>MIT © 2026</small>
+            </span>
+          </div>
+          <p class="onboarding-tagline">Making finance personal, simple, and secure.</p>
+        </div>
+      </div>
     </div>
   </div>
 

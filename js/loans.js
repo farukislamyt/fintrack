@@ -20,18 +20,64 @@ const Loans = (() => {
     save(all);
   };
 
-  const remove = (id) => save(getAll().filter(l => l.id !== id));
+  const remove = (id) => {
+    // ─── DELETE RELATED TRANSACTIONS ───
+    if (typeof Transactions !== 'undefined') {
+      const allTxns = Transactions.getAll();
+      const relatedTxns = allTxns.filter(t => t.loanId === id);
+      relatedTxns.forEach(t => Transactions.remove(t.id));
+    }
+    
+    save(getAll().filter(l => l.id !== id));
+  };
 
   // ── Add a payment to a loan ───────────────────────────────
   const addPayment = (loanId, amount, note = '') => {
     const all  = getAll();
     const loan = all.find(l => l.id === loanId);
-    if (!loan) return false;
+    if (!loan) {
+      console.error('[Loans] Loan not found:', loanId);
+      return false;
+    }
     if (!Array.isArray(loan.payments)) loan.payments = [];
-    loan.payments.push({ id: Utils.uid(), amount, date: Utils.today(), note, createdAt: new Date().toISOString() });
+    
+    const paymentId = Utils.uid();
+    const paymentDate = Utils.today();
+    loan.payments.push({ id: paymentId, amount, date: paymentDate, note, createdAt: new Date().toISOString() });
     const paid = loan.payments.reduce((s, p) => s + p.amount, 0);
     if (paid >= loan.amount) loan.status = 'settled';
     save(all);
+    
+    // ─── CREATE CORRESPONDING TRANSACTION ───
+    try {
+      if (typeof Transactions === 'undefined') {
+        console.warn('[Loans] Transactions module not available');
+        return true;
+      }
+      
+      const txnType = loan.loanType === 'taken' ? 'expense' : 'income';
+      const txnCategory = loan.loanType === 'taken' ? 'Loan Payment' : 'Loan Received';
+      const txnDesc = loan.loanType === 'taken' 
+        ? `Loan payment to ${loan.personName}` 
+        : `Loan payment from ${loan.personName}`;
+      
+      Transactions.upsert({
+        type: txnType,
+        category: txnCategory,
+        description: txnDesc,
+        amount: amount,
+        date: paymentDate,
+        payment: 'bank',
+        notes: note || `Loan #${loanId.slice(0,8)}`,
+        loanId: loanId,
+        paymentId: paymentId,
+        recurring: false
+      });
+    } catch (err) {
+      console.error('[Loans] Failed to create transaction:', err);
+      // Continue anyway - loan payment is recorded even if transaction creation fails
+    }
+    
     return true;
   };
 
@@ -43,6 +89,15 @@ const Loans = (() => {
     const paid = loan.payments.reduce((s, p) => s + p.amount, 0);
     loan.status = paid >= loan.amount ? 'settled' : 'active';
     save(all);
+    
+    // ─── DELETE CORRESPONDING TRANSACTION ───
+    if (typeof Transactions !== 'undefined') {
+      const allTxns = Transactions.getAll();
+      const txnToDelete = allTxns.find(t => t.paymentId === paymentId && t.loanId === loanId);
+      if (txnToDelete) {
+        Transactions.remove(txnToDelete.id);
+      }
+    }
   };
 
   const markSettled = (id) => {
@@ -278,9 +333,23 @@ const Loans = (() => {
     const interest   = parseFloat(document.getElementById('loanInterestRate').value) || 0;
     const note       = document.getElementById('loanNote').value.trim();
 
-    if (!personName || !amount || amount <= 0 || !date) {
-      Utils.toast('Fill in all required fields', 'error'); return;
-    }
+    // ── Enhanced Validation ──────────────────────────────────
+    let ok = true;
+    const setErr = (fid, msg) => {
+      const err = document.getElementById(fid+'Error');
+      if (err) err.textContent = msg;
+      const inp = document.getElementById(fid);
+      if (inp) inp.classList.toggle('invalid', !!msg);
+      if (msg) ok = false;
+    };
+    
+    setErr('loanPersonName', !personName                    ? 'Enter person name'           : '');
+    setErr('loanAmount',     !Utils.isValidAmount(amount)   ? 'Enter valid amount (> 0)'   : '');
+    setErr('loanDate',       !Utils.isValidDate(date)       ? 'Select valid date'          : '');
+    setErr('loanInterestRate', interest < 0 || interest > 100 ? 'Interest must be 0-100%' : '');
+    
+    if (!ok) return;
+
     upsert({ id, loanType, personName, amount, date, dueDate, interestRate: interest, note });
     Modal.close('loanModal');
     render();
@@ -291,11 +360,18 @@ const Loans = (() => {
     const inp  = document.querySelector(`.loan-payment-inp[data-loan-id="${loanId}"]`);
     const note = document.querySelector(`.loan-payment-note[data-loan-id="${loanId}"]`);
     const amt  = parseFloat(inp?.value || 0);
-    if (!amt || amt <= 0) { Utils.toast('Enter a valid payment amount', 'error'); return; }
+    
+    if (!Utils.isValidAmount(amt)) { Utils.toast('Enter a valid payment amount (> 0)', 'error'); return; }
+    
     const loan = getAll().find(l => l.id === loanId);
+    if (!loan) { Utils.toast('Loan not found', 'error'); return; }
+    
     const rem  = getRemaining(loan);
     if (amt > rem + 0.01) { Utils.toast(`Payment exceeds remaining balance of ${Utils.formatCurrency(rem)}`, 'warning'); return; }
+    
     addPayment(loanId, amt, note?.value?.trim() || '');
+    inp.value = '';
+    note.value = '';
     render();
     Utils.toast(`✓ Payment of ${Utils.formatCurrency(amt)} recorded`, 'success');
   };

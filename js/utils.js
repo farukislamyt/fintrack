@@ -148,12 +148,24 @@ const Utils = (() => {
     return String(Math.round(n));
   };
 
+  // ── Input Validation ─────────────────────────────────────
+  const isValidAmount = (amount) => {
+    const n = parseFloat(amount);
+    return !isNaN(n) && isFinite(n) && n > 0;
+  };
+
+  const isValidDate = (dateStr) => {
+    if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
+    const d = parseDate(dateStr);
+    return d instanceof Date && !isNaN(d);
+  };
+
   return {
     uid, formatCurrency, formatDate, formatRelativeDate, parseDate,
     today, currentMonth, currentYear,
     filterByPeriod, summarize, groupByCategory, groupByMonth,
     toast, MONTHS, MONTHS_FULL, debounce, download, toCSV, escHtml,
-    clamp, abbrevNum
+    clamp, abbrevNum, isValidAmount, isValidDate
   };
 })();
 window.Utils = Utils;
