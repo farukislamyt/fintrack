@@ -141,6 +141,7 @@ const Settings = {
     Settings.renderImportOptions();
     Settings.renderThemeSection();
     Settings.renderAppInfo();
+    Settings.renderPagesLinks();
   },
   
   renderAppInfo: () => {
@@ -175,6 +176,57 @@ const Settings = {
       </div>
     `;
   },
+
+  renderPagesLinks: () => {
+    const el = document.getElementById('appInfoSection');
+    if (!el || typeof Pages === 'undefined') return;
+
+    const pagesHTML = `
+      <div class="settings-card settings-card--pages">
+        <h3 class="settings-card-title">Resources & Information</h3>
+        <div class="pages-grid">
+          <a href="#" data-page-link="about" data-mode="page" class="page-link">
+            <span class="page-link-icon">ℹ️</span>
+            <div class="page-link-text">
+              <strong>About Us</strong>
+              <small>Learn about FinTrack Pro</small>
+            </div>
+          </a>
+          <a href="#" data-page-link="privacy" data-mode="page" class="page-link">
+            <span class="page-link-icon">🔒</span>
+            <div class="page-link-text">
+              <strong>Privacy Policy</strong>
+              <small>Your data privacy</small>
+            </div>
+          </a>
+          <a href="#" data-page-link="terms" data-mode="page" class="page-link">
+            <span class="page-link-icon">⚖️</span>
+            <div class="page-link-text">
+              <strong>Terms of Service</strong>
+              <small>Legal terms</small>
+            </div>
+          </a>
+          <a href="#" data-page-link="help" data-mode="page" class="page-link">
+            <span class="page-link-icon">❓</span>
+            <div class="page-link-text">
+              <strong>Help & FAQ</strong>
+              <small>Frequently asked questions</small>
+            </div>
+          </a>
+          <a href="#" data-page-link="contact" data-mode="page" class="page-link">
+            <span class="page-link-icon">✉️</span>
+            <div class="page-link-text">
+              <strong>Contact Us</strong>
+              <small>Get in touch with us</small>
+            </div>
+          </a>
+        </div>
+      </div>
+    `;
+
+    el.innerHTML = el.innerHTML + pagesHTML;
+  },
+
   renderCategories: () => {
     const render = (id, type, cats) => {
       const el = document.getElementById(id);
@@ -591,13 +643,15 @@ const App = {
     Reports.init();
     Settings.init();
     DataManager.init();
+    if (typeof Pages !== 'undefined') Pages.init();
+    
     document.getElementById('dashPeriod')?.addEventListener('change', App.refreshDashboard);
     
     // Initialize onboarding (only shows on first launch)
     Onboarding.init();
     
     const hash = location.hash.replace('#','');
-    const valid = ['dashboard','transactions','budget','goals','loans','reports','settings'];
+    const valid = ['dashboard','transactions','budget','goals','loans','reports','settings','pages'];
     Nav.goTo(valid.includes(hash) ? hash : 'dashboard');
   }
 };
