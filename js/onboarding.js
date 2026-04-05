@@ -3,9 +3,17 @@
  * First-time user setup wizard
  */
 const Onboarding = (() => {
-  const VERSION = '3.0.1';
-  const AUTHOR = 'FinTrack Team';
-  const LAUNCH_DATE = '2026';
+  const CONFIG = {
+    VERSION: '3.1.0',
+    BUILD_DATE: '2026-04-05',
+    DEVELOPER: 'FinTrack Team',
+    WEBSITE: '#',
+    EMAIL: 'support@fintrackpro.com',
+    LICENSE: 'MIT © 2026'
+  };
+  
+  // Expose globally for settings
+  window.APP_CONFIG = CONFIG;
 
   const hasSeenOnboarding = () => {
     return Storage.get('_onboarding_completed', false);

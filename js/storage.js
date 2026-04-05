@@ -25,7 +25,7 @@ const Storage = (() => {
       const raw = localStorage.getItem(PREFIX + key);
       return raw !== null ? JSON.parse(raw) : fallback;
     } catch (e) {
-      console.warn('[Storage] get:', key, e.message);
+      Logger.warn('Storage get failed', { key, error: e.message });
       return fallback;
     }
   };
@@ -38,7 +38,7 @@ const Storage = (() => {
       if (e.name === 'QuotaExceededError' || e.code === 22) {
         setTimeout(() => { if (window.Utils) Utils.toast('Storage full! Export data to free space.', 'error', 7000); }, 100);
       }
-      console.warn('[Storage] set:', key, e.message);
+      Logger.warn('Storage set failed', { key, error: e.message });
       return false;
     }
   };

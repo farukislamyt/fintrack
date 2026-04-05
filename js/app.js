@@ -137,6 +137,40 @@ const Settings = {
     document.getElementById('savingsTarget').value  = s.savingsTarget || 20;
     Settings.renderCategories();
     Settings.renderStorageInfo();
+    Settings.renderAppInfo();
+  },
+  
+  renderAppInfo: () => {
+    const el = document.getElementById('appInfoSection');
+    if (!el || !window.APP_CONFIG) return;
+    const cfg = window.APP_CONFIG;
+    el.innerHTML = `
+      <div class="settings-card settings-card--info">
+        <h3 class="settings-card-title">About FinTrack Pro</h3>
+        <div class="app-info-grid">
+          <div class="info-row">
+            <span class="info-label">Version</span>
+            <span class="info-value">${cfg.VERSION}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Build Date</span>
+            <span class="info-value">${cfg.BUILD_DATE}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Developer</span>
+            <span class="info-value">${cfg.DEVELOPER}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Email</span>
+            <span class="info-value">${cfg.EMAIL}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">License</span>
+            <span class="info-value">${cfg.LICENSE}</span>
+          </div>
+        </div>
+      </div>
+    `;
   },
   renderCategories: () => {
     const render = (id, type, cats) => {
@@ -299,7 +333,7 @@ const App = {
         } else { ls.hidden = true; }
       }
     } catch (err) {
-      console.error('[App] Dashboard refresh failed:', err);
+      Logger.error('Dashboard refresh failed', { error: err.message });
       Utils.toast('Failed to refresh dashboard', 'error');
     }
   },

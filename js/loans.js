@@ -1,84 +1,206 @@
 /**
- * FinTrack Pro — Loans v3.0
- * Full give/take loan management system
- * Features: partial payments, overdue tracking, interest calc, history
+ * FinTrack Pro — Loans v3.1
+ * PRODUCTION GRADE: Full loan management with balance-affecting transactions
+ * Features: Auto-balance updates, payment tracking, overdue alerts, audit logs
  */
 const Loans = (() => {
+  const VERSION = '3.1.0';
   const getAll  = () => Storage.get('loans', []);
   const save    = (d) => Storage.set('loans', d);
 
-  // FIX: spread order - data first, then override id
+  /**
+   * Upsert loan with automatic transaction creation
+   * CRITICAL: Creates initial loan transaction affecting main balance
+   */
   const upsert = (data) => {
     const all = getAll();
     const existingId = data.id && data.id !== 'null' ? data.id : null;
     const idx = existingId ? all.findIndex(l => l.id === existingId) : -1;
+    const isNewLoan = idx === -1;
+    const loanId = existingId || Utils.uid();
+    
     if (idx > -1) {
-      all[idx] = { ...all[idx], ...data, id: existingId, updatedAt: new Date().toISOString() };
+      // Update existing loan
+      all[idx] = { ...all[idx], ...data, id: loanId, updatedAt: new Date().toISOString() };
+      Logger.info(`Loan updated: ${loanId}`, { type: data.loanType, person: data.personName, amount: data.amount });
     } else {
-      all.push({ ...data, id: Utils.uid(), createdAt: new Date().toISOString(), payments: [], status: 'active' });
-    }
-    save(all);
-  };
-
-  const remove = (id) => {
-    // ─── DELETE RELATED TRANSACTIONS ───
-    if (typeof Transactions !== 'undefined') {
-      const allTxns = Transactions.getAll();
-      const relatedTxns = allTxns.filter(t => t.loanId === id);
-      relatedTxns.forEach(t => Transactions.remove(t.id));
+      // Create new loan with initial transaction
+      all.push({ 
+        ...data, 
+        id: loanId, 
+        createdAt: new Date().toISOString(), 
+        payments: [], 
+        status: 'active',
+        txnRecorded: false // Track if initial transaction was created
+      });
+      Logger.info(`Loan created: ${loanId}`, { type: data.loanType, person: data.personName, amount: data.amount });
     }
     
-    save(getAll().filter(l => l.id !== id));
-  };
-
-  // ── Add a payment to a loan ───────────────────────────────
-  const addPayment = (loanId, amount, note = '') => {
-    const all  = getAll();
-    const loan = all.find(l => l.id === loanId);
-    if (!loan) {
-      console.error('[Loans] Loan not found:', loanId);
-      return false;
-    }
-    if (!Array.isArray(loan.payments)) loan.payments = [];
-    
-    const paymentId = Utils.uid();
-    const paymentDate = Utils.today();
-    loan.payments.push({ id: paymentId, amount, date: paymentDate, note, createdAt: new Date().toISOString() });
-    const paid = loan.payments.reduce((s, p) => s + p.amount, 0);
-    if (paid >= loan.amount) loan.status = 'settled';
     save(all);
     
-    // ─── CREATE CORRESPONDING TRANSACTION ───
+    // ─── CREATE INITIAL LOAN TRANSACTION ───
+    if (isNewLoan) {
+      createInitialLoanTransaction(loanId, data);
+    }
+  };
+
+  /**
+   * Create initial loan transaction affecting main balance
+   * Taken loan = INCOME (you received money)
+   * Given loan = EXPENSE (you gave money)
+   */
+  const createInitialLoanTransaction = (loanId, loanData) => {
     try {
       if (typeof Transactions === 'undefined') {
-        console.warn('[Loans] Transactions module not available');
-        return true;
+        Logger.error('Transactions module not available');
+        return false;
       }
       
-      const txnType = loan.loanType === 'taken' ? 'expense' : 'income';
-      const txnCategory = loan.loanType === 'taken' ? 'Loan Payment' : 'Loan Received';
-      const txnDesc = loan.loanType === 'taken' 
-        ? `Loan payment to ${loan.personName}` 
-        : `Loan payment from ${loan.personName}`;
+      const loan = getAll().find(l => l.id === loanId);
+      if (!loan) {
+        Logger.error('Loan not found during transaction creation', { loanId });
+        return false;
+      }
       
-      Transactions.upsert({
+      // CRITICAL LOGIC:
+      // Taken loan = you RECEIVED money = INCOME transaction
+      // Given loan = you GAVE money = EXPENSE transaction
+      const isTakenLoan = loan.loanType === 'taken';
+      const txnType = isTakenLoan ? 'income' : 'expense';
+      const txnCategory = isTakenLoan ? 'Loan Received' : 'Loan Given';
+      const txnDesc = isTakenLoan 
+        ? `Loan received from ${loan.personName}` 
+        : `Loan given to ${loan.personName}`;
+      
+      const txnData = {
         type: txnType,
         category: txnCategory,
         description: txnDesc,
-        amount: amount,
-        date: paymentDate,
+        amount: loan.amount,
+        date: loan.date || Utils.today(),
         payment: 'bank',
-        notes: note || `Loan #${loanId.slice(0,8)}`,
+        notes: loan.note || `Loan #${loanId.slice(0,8)}`,
         loanId: loanId,
-        paymentId: paymentId,
+        isInitialLoan: true,
         recurring: false
+      };
+      
+      Transactions.upsert(txnData);
+      
+      // Mark as recorded
+      const all = getAll();
+      const loanForUpdate = all.find(l => l.id === loanId);
+      if (loanForUpdate) {
+        loanForUpdate.txnRecorded = true;
+        save(all);
+      }
+      
+      Logger.info(`Initial transaction created for loan ${loanId}`, {
+        type: txnType,
+        amount: loan.amount,
+        category: txnCategory
       });
+      
+      return true;
     } catch (err) {
-      console.error('[Loans] Failed to create transaction:', err);
-      // Continue anyway - loan payment is recorded even if transaction creation fails
+      Logger.error('Failed to create initial transaction', { error: err.message, loanId });
+      return false;
     }
-    
-    return true;
+  };
+
+  const remove = (id) => {
+    try {
+      const loan = getAll().find(l => l.id === id);
+      if (!loan) {
+        Logger.warn('Loan not found for deletion', { loanId: id });
+        return;
+      }
+      
+      // ─── DELETE RELATED TRANSACTIONS ───
+      if (typeof Transactions !== 'undefined') {
+        const allTxns = Transactions.getAll();
+        const relatedTxns = allTxns.filter(t => t.loanId === id);
+        Logger.info(`Deleted ${relatedTxns.length} transactions for loan`, { loanId: id });
+        relatedTxns.forEach(t => Transactions.remove(t.id));
+      }
+      
+      const updated = getAll().filter(l => l.id !== id);
+      save(updated);
+      Logger.info('Loan deleted', { loanId: id, type: loan.loanType });
+    } catch (err) {
+      Logger.error('Error deleting loan', { error: err.message, loanId: id });
+    }
+  };
+
+  /**
+   * Add payment to loan with transaction
+   * Taken loan payment = EXPENSE (you're paying back)
+   * Given loan payment = INCOME (you're receiving payment)
+   */
+  const addPayment = (loanId, amount, note = '') => {
+    try {
+      const all  = getAll();
+      const loan = all.find(l => l.id === loanId);
+      
+      if (!loan) {
+        Logger.error('Loan not found for payment', { loanId });
+        return false;
+      }
+      
+      if (!Utils.isValidAmount(amount)) {
+        Logger.error('Invalid payment amount', { amount });
+        return false;
+      }
+      
+      if (!Array.isArray(loan.payments)) loan.payments = [];
+      
+      const paymentId = Utils.uid();
+      const paymentDate = Utils.today();
+      loan.payments.push({ 
+        id: paymentId, 
+        amount, 
+        date: paymentDate, 
+        note, 
+        createdAt: new Date().toISOString() 
+      });
+      
+      const paid = loan.payments.reduce((s, p) => s + p.amount, 0);
+      if (paid >= loan.amount) loan.status = 'settled';
+      save(all);
+      
+      Logger.info(`Payment added to loan`, { loanId, amount, remaining: loan.amount - paid });
+      
+      // ─── CREATE PAYMENT TRANSACTION ───
+      if (typeof Transactions !== 'undefined') {
+        const isTakenLoan = loan.loanType === 'taken';
+        const txnType = isTakenLoan ? 'expense' : 'income';
+        const txnCategory = isTakenLoan ? 'Loan Payment Out' : 'Loan Payment In';
+        const txnDesc = isTakenLoan 
+          ? `Loan payment to ${loan.personName}` 
+          : `Loan payment from ${loan.personName}`;
+        
+        Transactions.upsert({
+          type: txnType,
+          category: txnCategory,
+          description: txnDesc,
+          amount: amount,
+          date: paymentDate,
+          payment: 'bank',
+          notes: note || `Loan #${loanId.slice(0,8)} payment`,
+          loanId: loanId,
+          paymentId: paymentId,
+          isPayment: true,
+          recurring: false
+        });
+        
+        Logger.info(`Payment transaction created`, { txnType, amount, category: txnCategory });
+      }
+      
+      return true;
+    } catch (err) {
+      Logger.error('Error adding payment', { error: err.message, loanId });
+      return false;
+    }
   };
 
   const deletePayment = (loanId, paymentId) => {
