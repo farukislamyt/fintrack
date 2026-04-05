@@ -74,6 +74,8 @@
   <!-- App (ORDER MATTERS) -->
   <script src="js/storage.js"      defer></script>
   <script src="js/logger.js"       defer></script>
+  <script src="js/datasync.js"     defer></script>
+  <script src="js/thememanager.js" defer></script>
   <script src="js/utils.js"        defer></script>
   <script src="js/charts.js"       defer></script>
   <script src="js/transactions.js" defer></script>
@@ -81,6 +83,7 @@
   <script src="js/goals.js"        defer></script>
   <script src="js/loans.js"        defer></script>
   <script src="js/reports.js"      defer></script>
+  <script src="js/backupmanager.js" defer></script>
   <script src="js/onboarding.js"   defer></script>
   <script src="js/app.js"          defer></script>
 
@@ -457,7 +460,20 @@
               <label class="btn-ghost btn-upload" for="importFile" tabindex="0">↑ Import</label>
               <input type="file" id="importFile" accept=".json" hidden />
             </div>
-            <div id="storageInfo"></div>
+            <div id="storageInfoSection"></div>
+            <hr class="divider" />
+            <h3>Backup History</h3>
+            <div id="backupHistorySection"></div>
+            <hr class="divider" />
+            <h3>Import Options</h3>
+            <div id="importOptionsSection"></div>
+            <hr class="divider" />
+            <h3>Theme & Appearance</h3>
+            <div id="themeSection"></div>
+            <hr class="divider" />
+            <h3>Advanced</h3>
+            <button class="btn-ghost" id="optimizeStorageBtn">§ Optimize Storage</button>
+            <button class="btn-ghost" id="viewLogsBtn">ᵿ View Logs</button>
             <hr class="divider" />
             <h3>Danger Zone</h3>
             <button class="btn-danger" id="clearAllData">⚠ Clear All Data</button>

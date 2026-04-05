@@ -136,7 +136,10 @@ const Settings = {
     document.getElementById('dateFormat').value     = s.dateFormat    || 'MM/DD/YYYY';
     document.getElementById('savingsTarget').value  = s.savingsTarget || 20;
     Settings.renderCategories();
-    Settings.renderStorageInfo();
+    Settings.renderStorageInfoSection();
+    Settings.renderBackupHistory();
+    Settings.renderImportOptions();
+    Settings.renderThemeSection();
     Settings.renderAppInfo();
   },
   
@@ -185,11 +188,117 @@ const Settings = {
     render('incomeCatList',  'income',  AppState.settings.incomeCategories);
     render('expenseCatList', 'expense', AppState.settings.expenseCategories);
   },
-  renderStorageInfo: () => {
-    const el = document.getElementById('storageInfo');
+  renderStorageInfoSection: () => {
+    const el = document.getElementById('storageInfoSection');
     if (!el) return;
     const u = Storage.getUsage();
-    el.innerHTML = `<div class="storage-usage"><div class="storage-bar-wrap"><div class="storage-bar-fill" style="width:${u.pct}%"></div></div><span class="storage-text">${u.kb} KB used (~${u.pct}% of 5 MB)</span></div>`;
+    const pct = parseFloat(u.pct);
+    const status = pct > 80 ? 'critical' : pct > 60 ? 'warning' : 'ok';
+    el.innerHTML = `
+      <div class="storage-usage storage-${status}">
+        <div class="storage-bar-wrap">
+          <div class="storage-bar-fill" style="width:${u.pct}%"></div>
+        </div>
+        <span class="storage-text">${u.kb} KB used (~${u.pct}% of 5 MB)</span>
+        ${pct > 80 ? '<p class="storage-warning">⚠ Storage nearly full. Consider exporting data.</p>' : ''}
+      </div>
+    `;
+  },
+
+  renderBackupHistory: () => {
+    const el = document.getElementById('backupHistorySection');
+    if (!el || typeof BackupManager === 'undefined') return;
+    
+    const backups = BackupManager.getBackupHistory();
+    if (backups.length === 0) {
+      el.innerHTML = '<p class="text-muted">No backups created yet. Export to create one.</p>';
+      return;
+    }
+
+    const html = backups.map((b, i) => `
+      <div class="backup-item">
+        <div class="backup-info">
+          <span class="backup-date">${new Date(b.timestamp).toLocaleString()}</span>
+          <span class="backup-size">${(b.size / 1024).toFixed(1)} KB</span>
+        </div>
+        <div class="backup-stats">
+          ${b.stats ? `<small>${b.stats.transactions || 0} txns • ${b.stats.budgets || 0} budgets • ${b.stats.goals || 0} goals</small>` : ''}
+        </div>
+      </div>
+    `).join('');
+
+    el.innerHTML = `<div class="backup-list">${html}</div>`;
+  },
+
+  renderImportOptions: () => {
+    const el = document.getElementById('importOptionsSection');
+    if (!el) return;
+
+    el.innerHTML = `
+      <div class="import-options">
+        <label class="option-item">
+          <input type="radio" name="importMode" value="replace" checked />
+          <span class="option-label">
+            <strong>Replace All Data</strong>
+            <small>Overwrite everything with imported data</small>
+          </span>
+        </label>
+        <label class="option-item">
+          <input type="radio" name="importMode" value="merge" />
+          <span class="option-label">
+            <strong>Merge with Current</strong>
+            <small>Keep existing data and add new items</small>
+          </span>
+        </label>
+      </div>
+    `;
+  },
+
+  renderThemeSection: () => {
+    const el = document.getElementById('themeSection');
+    if (!el || typeof ThemeManager === 'undefined') return;
+
+    const currentTheme = ThemeManager.getTheme();
+    const themes = [
+      { value: 'auto', label: '🌓 Auto', desc: 'Follow system preference' },
+      { value: 'light', label: '☀️ Light', desc: 'Always light theme' },
+      { value: 'dark', label: '🌙 Dark', desc: 'Always dark theme' }
+    ];
+
+    el.innerHTML = `
+      <div class="theme-options">
+        ${themes.map(t => `
+          <label class="option-item">
+            <input type="radio" name="themeOption" value="${t.value}" ${currentTheme === t.value ? 'checked' : ''} />
+            <span class="option-label">
+              <strong>${t.label}</strong>
+              <small>${t.desc}</small>
+            </span>
+          </label>
+        `).join('')}
+      </div>
+      <div class="accessibility-options">
+        <label class="checkbox-item">
+          <input type="checkbox" id="reducedMotionChk" ${ThemeManager.respects_prefers_reduced_motion() ? 'checked' : ''} />
+          <span>Reduce motion</span>
+        </label>
+      </div>
+    `;
+
+    // Add event listeners
+    document.querySelectorAll('input[name="themeOption"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        ThemeManager.setTheme(e.target.value);
+        DataSync.notifyObservers('settings', { type: 'theme-changed' });
+      });
+    });
+
+    const reducedMotionChk = document.getElementById('reducedMotionChk');
+    if (reducedMotionChk) {
+      reducedMotionChk.addEventListener('change', (e) => {
+        ThemeManager.enableReducedMotion(e.target.checked);
+      });
+    }
   },
   addCategory: () => {
     const name = document.getElementById('newCategoryName').value.trim();
@@ -224,35 +333,116 @@ const Settings = {
 // ── Data Manager ───────────────────────────────────────────
 const DataManager = {
   init: () => {
-    document.getElementById('exportJsonBtn')?.addEventListener('click', () => {
-      Utils.download(JSON.stringify(Storage.exportAll(),null,2), `fintrack-backup-${Utils.today()}.json`, 'application/json');
-      Utils.toast('✓ JSON exported', 'success');
+    // Export JSON
+    document.getElementById('exportJsonBtn')?.addEventListener('click', async () => {
+      if (typeof BackupManager === 'undefined') {
+        Utils.toast('Backup system not ready', 'error');
+        return;
+      }
+      const result = BackupManager.export_json();
+      Utils.toast(result ? '✓ JSON exported successfully' : '✗ Export failed', result ? 'success' : 'error');
     });
-    document.getElementById('exportCsvBtn')?.addEventListener('click', () => {
-      Utils.download(Utils.toCSV(Transactions.getAll()), `fintrack-txns-${Utils.today()}.csv`, 'text/csv');
-      Utils.toast('✓ CSV exported', 'success');
+
+    // Export CSV
+    document.getElementById('exportCsvBtn')?.addEventListener('click', async () => {
+      if (typeof BackupManager === 'undefined') {
+        Utils.toast('Backup system not ready', 'error');
+        return;
+      }
+      const result = BackupManager.export_csv();
+      Utils.toast(result ? '✓ CSV exported successfully' : '✗ Export failed', result ? 'success' : 'error');
     });
-    document.getElementById('exportBtn')?.addEventListener('click', () => {
-      Utils.download(Utils.toCSV(Transactions.getAll()), `fintrack-txns-${Utils.today()}.csv`, 'text/csv');
-      Utils.toast('✓ CSV exported', 'success');
+
+    // Import file
+    document.getElementById('importFile')?.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      if (typeof BackupManager === 'undefined') {
+        Utils.toast('Backup system not ready', 'error');
+        e.target.value = '';
+        return;
+      }
+
+      // Validate and prepare import
+      const validation = await BackupManager.importFromJSON(file);
+      
+      if (!validation.success) {
+        Utils.toast('✗ Invalid backup file: ' + (validation.errors?.[0] || 'Unknown error'), 'error');
+        e.target.value = '';
+        return;
+      }
+
+      // Show confirmation with import mode
+      const importMode = document.querySelector('input[name="importMode"]:checked')?.value || 'replace';
+      const action = importMode === 'merge' ? 'Merge' : 'Replace';
+      const message = `Install this backup? (${validation.stats?.transactions || 0} transactions)\n\n${action} mode selected.`;
+
+      ConfirmModal.show(message, () => {
+        const result = BackupManager.importBackupData(validation.backup, importMode === 'merge');
+        if (result.success) {
+          Settings.load();
+          App.refreshAll();
+          Utils.toast(`✓ ${result.message}`, 'success');
+        } else {
+          Utils.toast(`✗ ${result.message}`, 'error');
+        }
+        e.target.value = '';
+      });
     });
-    document.getElementById('importFile')?.addEventListener('change', e => {
-      const file = e.target.files[0]; if (!file) return;
-      const r = new FileReader();
-      r.onload = ev => {
-        try {
-          const data = JSON.parse(ev.target.result);
-          const n = Storage.importAll(data);
-          Settings.load(); App.refreshAll();
-          Utils.toast(`✓ Imported successfully (${n} keys)`, 'success');
-        } catch { Utils.toast('Invalid JSON file', 'error'); }
-      };
-      r.readAsText(file); e.target.value = '';
+
+    // Optimize storage
+    document.getElementById('optimizeStorageBtn')?.addEventListener('click', () => {
+      if (typeof BackupManager === 'undefined') {
+        Utils.toast('Backup system not ready', 'error');
+        return;
+      }
+
+      ConfirmModal.show('Optimize storage? This removes duplicate entries.', () => {
+        const result = BackupManager.optimizeStorage();
+        if (result.success) {
+          Settings.renderStorageInfoSection();
+          Utils.toast(`✓ Freed ${(result.freed / 1024).toFixed(1)} KB of space`, 'success');
+        } else {
+          Utils.toast('✗ Optimization failed', 'error');
+        }
+      });
     });
+
+    // View logs
+    document.getElementById('viewLogsBtn')?.addEventListener('click', () => {
+      if (typeof Logger === 'undefined') {
+        Utils.toast('Logger not available', 'error');
+        return;
+      }
+
+      const logs = Logger.getLogs().slice(-50); // Last 50 logs
+      const logText = logs.map(l => `[${l.timestamp}] ${l.level}: ${l.message}`).join('\n');
+      
+      const modal = document.createElement('div');
+      modal.className = 'modal-backdrop';
+      modal.innerHTML = `
+        <div class="modal" style="max-height: 80vh; overflow-y: auto;">
+          <h3>Application Logs (Last 50)</h3>
+          <textarea readonly style="width: 100%; height: 400px; font-family: monospace; font-size: 0.85rem;">${logText}</textarea>
+          <button class="btn-primary" onclick="this.closest('.modal-backdrop').remove()">Close</button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.hidden = false;
+      Logger.info('Logs viewer opened');
+    });
+
+    // Clear all data
     document.getElementById('clearAllData')?.addEventListener('click', () => {
-      ConfirmModal.show('⚠ Permanently delete ALL data? This cannot be undone.', () => {
-        Storage.clear(); Settings.load(); App.refreshAll();
-        Utils.toast('All data cleared', 'warning');
+      ConfirmModal.show('⚠ Permanently delete ALL data? This cannot be undone.\n\nCreate an export first!', () => {
+        Storage.clear();
+        if (typeof DataSync !== 'undefined') {
+          DataSync.syncAll();
+        }
+        Settings.load();
+        App.refreshAll();
+        Utils.toast('✓ All data cleared', 'warning');
       });
     });
   }
@@ -385,6 +575,11 @@ const App = {
   init: () => {
     Storage.init();
     Settings.load();
+    
+    // Initialize managers
+    if (typeof ThemeManager !== 'undefined') ThemeManager.init();
+    if (typeof DataSync !== 'undefined') DataSync.startAutoSync(5000);
+    
     Theme.init();
     Modal.init();
     ConfirmModal.init();

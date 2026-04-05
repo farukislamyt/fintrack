@@ -1864,6 +1864,238 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 
 /* ================================================================
+   ENHANCED DATA MANAGEMENT UI
+   ================================================================ */
+
+/* Storage Info Section */
+.storage-usage {
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--balance-soft);
+  border: 1px solid var(--balance-soft);
+  transition: all var(--t-base);
+}
+
+.storage-usage.storage-warning {
+  background: var(--gold-soft);
+  border-color: var(--gold);
+}
+
+.storage-usage.storage-critical {
+  background: var(--expense-soft);
+  border-color: var(--expense);
+}
+
+.storage-bar-wrap {
+  width: 100%;
+  height: 6px;
+  background: var(--border);
+  border-radius: var(--r-full);
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.storage-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--balance), var(--accent-hi));
+  transition: width var(--t-base);
+}
+
+.storage-text {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.storage-warning {
+  color: var(--expense);
+  font-size: 0.75rem;
+  margin-top: 6px;
+}
+
+/* Backup History */
+.backup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.backup-item {
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all var(--t-fast);
+}
+
+.backup-item:hover {
+  border-color: var(--border-mid);
+  background: var(--bg-overlay);
+}
+
+.backup-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.backup-date {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.backup-size {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.backup-stats {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+/* Import Options */
+.import-options,
+.theme-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-item,
+.checkbox-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  border-radius: var(--r-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+
+.option-item:hover,
+.checkbox-item:hover {
+  border-color: var(--border-mid);
+  background: var(--bg-overlay);
+}
+
+.option-item input[type="radio"],
+.checkbox-item input[type="checkbox"] {
+  margin-top: 2px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.option-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.option-label strong {
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.option-label small {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* Theme Section */
+.accessibility-options {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* Data Actions Button Group */
+.data-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.btn-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+
+/* Theme Transition */
+html.theme-transitioning {
+  transition: background var(--t-slow) var(--ease), color var(--t-slow) var(--ease);
+}
+
+html.theme-transitioning * {
+  transition: background-color var(--t-slow) var(--ease), color var(--t-slow) var(--ease), border-color var(--t-slow) var(--ease);
+}
+
+/* Settings Card Info */
+.settings-card--info {
+  background: linear-gradient(135deg, var(--accent-glow) 0%, transparent 100%);
+  border: 1px solid var(--border-focus);
+  padding: 16px;
+  border-radius: var(--r-lg);
+}
+
+.app-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  background: var(--bg-card);
+  border-radius: var(--r-md);
+}
+
+.info-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.info-value {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .data-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .app-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .backup-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ================================================================
    PERFORMANCE OPTIMIZATIONS
    ================================================================ */
 
